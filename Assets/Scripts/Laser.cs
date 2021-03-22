@@ -6,17 +6,19 @@ public class Laser : MonoBehaviour
 {
     [SerializeField]
     private float _speed = 8.5f;
-    [SerializeField]
     private Transform _pool;
-    private Transform _lastParent;
+    private Transform _container;
+    private Transform _lastOwner;
 
    
     void Start()
     {
         if (_pool == null)
             _pool = GameObject.Find("LaserPool").transform;
-        if (_lastParent == null)
-            SetLastParent(transform.parent);
+        if (_container == null)
+            _container = GameObject.Find("LaserContainer").transform;
+        if (_lastOwner == null)
+            SetLastOwner(transform.parent);
         
     }
 
@@ -28,7 +30,7 @@ public class Laser : MonoBehaviour
 
     private void Movement()
     {
-        if (Vector3.Distance(transform.position, _lastParent.position) > 15)
+        if (Vector3.Distance(transform.position, _lastOwner.position) > 15)
             transform.parent = _pool;
         else
             transform.Translate(transform.TransformDirection(Vector3.forward)* _speed * Time.deltaTime, Space.World);
@@ -43,13 +45,18 @@ public class Laser : MonoBehaviour
         }
         else if (transform.parent != null)
         {
-            SetLastParent(transform.parent);
+            SetLastOwner(transform.parent);
         }
     }
 
-    public void SetLastParent(Transform parent)
+    public void SetLastOwner(Transform parent)
     {
-        _lastParent = parent;
-        transform.parent = null;
+        _lastOwner = parent;
+        transform.parent = _container;
+    }
+
+    public void SendToPool()
+    {
+        transform.parent = _pool;
     }
 }

@@ -5,6 +5,8 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
     [SerializeField]
+    private int _lives = 3;
+    [SerializeField]
     private bool _horizontalFlight;
     [SerializeField]
     private float _speed = 5;
@@ -17,9 +19,13 @@ public class Player : MonoBehaviour
     [SerializeField]
     private bool _laserCanFire;
     [SerializeField]
-    [Tooltip("Won't change edited during Play Mode")]
+    [Tooltip("Active Cycle GO to effect any change in PlayMode")]
     private float _laserCoolDown = .25f;
     private WaitForSeconds _laserCoolDownTimer;
+
+    public delegate void PlayerDeath();
+    public static event PlayerDeath OnPlayerDeath;
+
 
     private void OnEnable()
     {
@@ -28,10 +34,14 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        //_laserCoolDownTimer = new WaitForSeconds(_laserCoolDown);
         if (_laserPool == null)
             _laserPool = GameObject.Find("LaserPool").transform;
-        //Take current position = new position vector3.zero
+        else
+        {
+            GameObject Pool = new GameObject("LaserPool");
+            _laserPool = Pool.transform;
+        }
+
         transform.position = Vector3.zero;
     }
 
@@ -39,6 +49,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         Movement();
+
         Weapon();
     }
 
@@ -96,7 +107,7 @@ public class Player : MonoBehaviour
                 laserTemp.transform.parent = this.transform;
                 laserTemp.transform.position = launch;
                 laserTemp.transform.rotation = transform.rotation;
-                laserTemp.GetComponent<Laser>().SetLastParent(this.transform);
+                laserTemp.GetComponent<Laser>().SetLastOwner(this.transform);
                 laserTemp.SetActive(true);
             }
             _laserCanFire = false;
@@ -106,10 +117,21 @@ public class Player : MonoBehaviour
 
     IEnumerator LaserReloadTimer()
     {
-        while (!_laserCanFire)
-        {
             yield return _laserCoolDownTimer;
             _laserCanFire = true;
+    }
+
+    public void Damage()
+    {
+        _lives--;
+
+        if (_lives < 1)
+        {
+            if (OnPlayerDeath != null)
+                OnPlayerDeath();
+
+            Destroy(this.gameObject);
         }
     }
+
 }
