@@ -30,10 +30,10 @@ public class Laser : MonoBehaviour
 
     private void Movement()
     {
-        if (Vector3.Distance(transform.position, _lastOwner.position) > 15)
-            transform.parent = _pool;
+        if (Vector3.Distance(Vector3.zero, transform.position) < 30)
+            transform.Translate(transform.TransformDirection(Vector3.forward) * _speed * Time.deltaTime, Space.World);
         else
-            transform.Translate(transform.TransformDirection(Vector3.forward)* _speed * Time.deltaTime, Space.World);
+            transform.parent = _pool;
     }
 
     private void OnTransformParentChanged()

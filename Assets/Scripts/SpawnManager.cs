@@ -9,6 +9,8 @@ public class SpawnManager : MonoBehaviour
     [SerializeField]
     private GameObject _enemyPrefab;
     [SerializeField]
+    private GameObject[] _powerupPrefabs;
+    [SerializeField]
     private Transform _enemyPool, _enemyContainer;
     [SerializeField]
     private int _enemyCountLimit;
@@ -21,7 +23,8 @@ public class SpawnManager : MonoBehaviour
     }
     void Start()
     {
-        StartCoroutine(SpawnRoutine());
+        StartCoroutine(EnemySpawnRoutine());
+        StartCoroutine(PowerUpSpawnRoutine());
     }
 
     public void PlayerDeath()
@@ -29,27 +32,54 @@ public class SpawnManager : MonoBehaviour
         _spawning = false;
     }
 
-    IEnumerator SpawnRoutine()
+    IEnumerator PowerUpSpawnRoutine()
     {
-        while (_spawning )
+        while(_spawning)
         {
+            float RNGTime = Random.Range(3f, 5f);
+            yield return new WaitForSeconds(RNGTime);
             Vector3 launch;
             if (!_horizontalFlight)
             {
-                float RNG = Random.Range(-8.5f, 8.5f);
-                launch = new Vector3(RNG, 0, 8);
+                float RNG = Random.Range(-20f, 20f);
+                launch = new Vector3(RNG, 0, 20+RNGTime);
             }
             else
             {
                 float RNG = Random.Range(-3.75f, 5.5f);
                 launch = new Vector3(0, RNG, 15);
             }
-            Spawn(launch);
+            SpawnPowerUP(launch);
+        }
+    }
+
+    private void SpawnPowerUP(Vector3 LaunchPOS)
+    {        
+        int RNGItem = Random.Range(0, _powerupPrefabs.Length);
+        Instantiate(_powerupPrefabs[RNGItem], LaunchPOS, Quaternion.identity);
+    }
+
+    IEnumerator EnemySpawnRoutine()
+    {
+        while (_spawning )
+        {
+            Vector3 launch;
+            if (!_horizontalFlight)
+            {
+                float RNG = Random.Range(-20f, 20f);
+                launch = new Vector3(RNG, 0, 20);
+            }
+            else
+            {
+                float RNG = Random.Range(-3.75f, 5.5f);
+                launch = new Vector3(0, RNG, 15);
+            }
+            SpawnEnemy(launch);
             yield return new WaitForSeconds(5);
         }
     }
 
-    private void Spawn(Vector3 LaunchPOS)
+    private void SpawnEnemy(Vector3 LaunchPOS)
     {
         if (_enemyPool.childCount < 1)
         {

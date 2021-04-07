@@ -10,28 +10,48 @@ public class Player : MonoBehaviour
     private bool _horizontalFlight;
     [SerializeField]
     private float _speed = 5;
+    [SerializeField]
+    private float _speedBoostMultipler = 1;
     private Vector3 _direction;
     [SerializeField]
     private GameObject _laserPrefab;
     [SerializeField]
-    private float _laserOffset;
+    [Tooltip("Normal Shot Offset")]
+    private Transform _laserOffset;
+    [SerializeField]
+    [Tooltip("Triple Shot Offset")]
+    private Transform[] _tripleShotOffset;
     private Transform _laserPool;
+    [SerializeField]
+    private bool _tripleShotActive, _speedBoostActive, _shieldActive;
+    [SerializeField]
+    private GameObject _shield;
+    private int _shieldCount;
+    private Renderer _shieldRenderer;
     [SerializeField]
     private bool _laserCanFire;
     [SerializeField]
     [Tooltip("Active Cycle GO to effect any change in PlayMode")]
     private float _laserCoolDown = .25f;
     private WaitForSeconds _laserCoolDownTimer;
+    private float _tripleShotCooldownTimer = 0;
+    private float _speedBoostCooldownTimer = 0;
+    [SerializeField]
+    private int _score;
+
 
     public delegate void PlayerDeath();
     public static event PlayerDeath OnPlayerDeath;
+    public delegate void PlayerDamaged(int LivesCount);
+    public static event PlayerDamaged OnPlayerDamaged;
 
 
     private void OnEnable()
     {
         _laserCoolDownTimer = new WaitForSeconds(_laserCoolDown);
+        Enemy.OnEnemyDeath += EnemyDeath;
     }
-    // Start is called before the first frame update
+     
     void Start()
     {
         if (_laserPool == null)
@@ -43,9 +63,9 @@ public class Player : MonoBehaviour
         }
 
         transform.position = Vector3.zero;
+        _shieldRenderer = _shield.GetComponent<Renderer>();
     }
 
-    // Update is called once per frame
     void Update()
     {
         Movement();
@@ -80,50 +100,85 @@ public class Player : MonoBehaviour
             horizontalInput = Input.GetAxis("Horizontal");
             verticalInput = Input.GetAxis("Vertical");
             _direction = new Vector3(horizontalInput, 0, verticalInput);
-            transform.Translate(_direction * _speed * Time.deltaTime);
+            transform.Translate(_direction * _speed * _speedBoostMultipler * Time.deltaTime);
 
             if (transform.position.z >= 0)
                 transform.position = new Vector3(transform.position.x, 0, 0);
-            else if (transform.position.z <= -4.5f)
-                transform.position = new Vector3(transform.position.x, 0, -4.5f);
-            if (transform.position.x >= 8.5f)
-                transform.position = new Vector3(8.5f, 0, transform.position.z);
-            else if (transform.position.x <= -8.5f)
-                transform.position = new Vector3(-8.5f, 0, transform.position.z);
+            else if (transform.position.z <= -10.75f)
+                transform.position = new Vector3(transform.position.x, 0, -10.75f);
+            if (transform.position.x >= 19.5f)
+                transform.position = new Vector3(19.5f, 0, transform.position.z);
+            else if (transform.position.x <= -19.5f)
+                transform.position = new Vector3(-19.5f, 0, transform.position.z);
         }
 
     }
 
     private void Weapon()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && _laserCanFire)
+        if (Input.GetKey(KeyCode.Space) && _laserCanFire)
         {
-            Vector3 launch = transform.position + transform.TransformDirection(Vector3.forward) * _laserOffset;
-            if (_laserPool.childCount < 1)
-                Instantiate(_laserPrefab, launch, transform.rotation, this.transform);
-            else
+            if (_tripleShotActive) //Triple Shot
             {
-                GameObject laserTemp = _laserPool.GetChild(0).gameObject;
-                laserTemp.transform.parent = this.transform;
-                laserTemp.transform.position = launch;
-                laserTemp.transform.rotation = transform.rotation;
-                laserTemp.GetComponent<Laser>().SetLastOwner(this.transform);
-                laserTemp.SetActive(true);
+                foreach (Transform laser in _tripleShotOffset)
+                {
+                    Vector3 launch = laser.position;
+                    if (_laserPool.childCount < 1)
+                        Instantiate(_laserPrefab, launch, laser.rotation, this.transform);
+                    else
+                    {
+                        PullLaserFromPool(launch, laser);
+                    }
+                }
+                _laserCanFire = false;
+                StartCoroutine(LaserReloadTimer());
             }
-            _laserCanFire = false;
-            StartCoroutine(LaserReloadTimer());
+            else //Normal Shot
+            {
+                Vector3 launch = _laserOffset.position;
+                if (_laserPool.childCount < 1)
+                    Instantiate(_laserPrefab, launch, transform.rotation, this.transform);
+                else
+                {
+                    PullLaserFromPool(launch, _laserOffset);
+                }
+                _laserCanFire = false;
+                StartCoroutine(LaserReloadTimer());
+            }
+
         }
+    }
+
+    private void PullLaserFromPool(Vector3 LaunchPOS, Transform Offset)
+    {
+        GameObject laserTemp = _laserPool.GetChild(0).gameObject;
+        laserTemp.transform.parent = this.transform;
+        laserTemp.transform.position = LaunchPOS;
+        laserTemp.transform.rotation = Offset.rotation;
+        laserTemp.GetComponent<Laser>().SetLastOwner(this.transform);
+        laserTemp.SetActive(true);
     }
 
     IEnumerator LaserReloadTimer()
     {
-            yield return _laserCoolDownTimer;
-            _laserCanFire = true;
+        yield return _laserCoolDownTimer;
+        _laserCanFire = true;
     }
 
     public void Damage()
     {
-        _lives--;
+        if (!_shieldActive)
+        {
+            _lives--;
+            if (OnPlayerDamaged != null)
+                OnPlayerDamaged(_lives);
+        }
+        else if (_shieldCount >= 1)
+        {
+            _shieldCount--;
+            StartCoroutine(ShieldPowerDownRoutine());
+        }
+
 
         if (_lives < 1)
         {
@@ -134,4 +189,124 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void EnemyDeath(int PointValue)
+    {
+        _score += PointValue;
+    }
+
+    public int GetScore()
+    { return _score; }
+
+    public void PowerUp(int type)
+    {
+        switch (type)
+        {
+            case 0:
+                _tripleShotCooldownTimer += 5;
+                if (!_tripleShotActive)
+                    StartCoroutine(TripleShotRoutine());
+                break;
+            case 1:
+                _speedBoostCooldownTimer += 5;
+                if (!_speedBoostActive)
+                    StartCoroutine(SpeedBoostRoutine());
+                break;
+            case 2:
+                if (!_shieldActive)
+                    StartCoroutine(ShieldPowerUpRoutine());
+                break;
+            default:
+                break;
+        }
+    }
+
+    IEnumerator TripleShotRoutine()
+    {
+        _tripleShotActive = true;
+        while (_tripleShotActive)
+        {
+            yield return new WaitForEndOfFrame();
+            _tripleShotCooldownTimer -= Time.deltaTime;
+            if (_tripleShotCooldownTimer <= 0)
+            {
+                _tripleShotCooldownTimer = 0;
+                _tripleShotActive = false;
+            }
+        }
+    }
+
+    IEnumerator SpeedBoostRoutine()
+    {
+        _speedBoostActive = true;
+        _speedBoostMultipler = 2.5f;
+        while (_speedBoostActive)
+        {
+            yield return new WaitForEndOfFrame();
+            _speedBoostCooldownTimer -= Time.deltaTime;
+            if (_speedBoostCooldownTimer <= 0)
+            {
+                _speedBoostCooldownTimer = 0;
+                _speedBoostActive = false;
+            }
+        }
+        _speedBoostMultipler = 1;
+    }
+
+    IEnumerator ShieldPowerUpRoutine()
+    {
+        _shieldActive = true;
+        _shieldCount = 3;
+        _shield.SetActive(true);
+        float power = 12f;
+        _shieldRenderer.material.SetFloat("_power", power);
+        while (power > -0.5f)
+        {
+            yield return new WaitForEndOfFrame();
+            power -= Time.deltaTime * 15;
+            _shieldRenderer.material.SetFloat("_power", power);
+        }
+        while (power < 1.5f)
+        {
+            yield return new WaitForEndOfFrame();
+            power += Time.deltaTime * 5;
+            _shieldRenderer.material.SetFloat("_power", power);
+        }
+        power = 1.5f;
+        _shieldRenderer.material.SetFloat("_power", power);
+
+    }
+
+    IEnumerator ShieldPowerDownRoutine()
+    {        
+        float powerStep = 1.5f;
+        float power = _shieldRenderer.material.GetFloat("_power");
+        float nextPower =  power + powerStep;
+        while (power < nextPower)
+        {
+            yield return new WaitForEndOfFrame();
+            power += Time.deltaTime * 10;
+            _shieldRenderer.material.SetFloat("_power", power);
+        }
+        power = nextPower;
+        _shieldRenderer.material.SetFloat("_power", power);
+        yield return new WaitForSeconds(.33f);
+        if (_shieldCount ==0)
+        {
+            while(power > -3f)
+            {
+                yield return new WaitForEndOfFrame();
+                power -= Time.deltaTime * 20;
+                _shieldRenderer.material.SetFloat("_power", power);
+            }
+            power = 0f;
+            _shieldRenderer.material.SetFloat("_power", power);
+            _shieldActive = false;
+            _shield.SetActive(false);
+        }
+    }
+
+    private void OnDisable()
+    {
+        Enemy.OnEnemyDeath -= EnemyDeath;
+    }
 }
