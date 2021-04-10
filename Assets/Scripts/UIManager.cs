@@ -16,7 +16,6 @@ public class UIManager : MonoBehaviour
     [SerializeField]
     [Range(0f, 5f)]
     private float _gameOverFlickerSpeed;
-    private bool _isGameOver = false;
     private Player _player;
 
 
@@ -50,31 +49,27 @@ public class UIManager : MonoBehaviour
     {
         yield return new WaitForEndOfFrame();
         _gameOverText.gameObject.SetActive(true);
-        GameManager.Instance.GameOver(_isGameOver);
         byte alpha = 0;
         _gameOverText.color = new Color32(255, 0, 0, 0);
-        while (_isGameOver)
+        while (GameManager.Instance.IsGameOver())
         {
-            
+           
             while (alpha < 255)
             {
                 yield return new WaitForEndOfFrame();
                 alpha += (byte)(Time.deltaTime * 100 * _gameOverFlickerSpeed);
-                if (alpha > 255)
-                    alpha = 255;
-
                 _gameOverText.color = new Color32(255, 0, 0, alpha);
             }
+
             _gameOverText.color = new Color32(255, 0, 0, 255);
+
             while (alpha > 0)
             {
                 yield return new WaitForEndOfFrame();
                 alpha -= (byte)(Time.deltaTime * 100 * _gameOverFlickerSpeed);
-                if (alpha < 0)
-                    alpha = 0;
-
                 _gameOverText.color = new Color32(255, 0, 0, alpha);
             }
+
             _gameOverText.color = new Color32(255, 0, 0, 0);
             yield return new WaitForEndOfFrame();
         }
@@ -92,7 +87,7 @@ public class UIManager : MonoBehaviour
 
     private void PlayerDeath()
     {
-        _isGameOver = true;
+        GameManager.Instance.GameOver(true);
         StartCoroutine(DisplayGameOver());
     }
 

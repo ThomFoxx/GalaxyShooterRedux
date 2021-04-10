@@ -18,6 +18,7 @@ public class GameManager : MonoBehaviour
             return _instance;
         } 
     }
+    
     private void Awake()
     {
         _instance = this;
@@ -25,7 +26,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.R))
+        if(_isGameOver && Input.GetKeyDown(KeyCode.R))
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 
     }
@@ -33,5 +34,10 @@ public class GameManager : MonoBehaviour
     public void GameOver(bool flag)
     {
         _isGameOver = flag;
+    }
+
+    public bool IsGameOver()
+    {
+        return _isGameOver;
     }
 }
