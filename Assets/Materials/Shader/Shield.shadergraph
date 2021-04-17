@@ -73,9 +73,6 @@
             "m_Id": "c7b98c42f6854503a1c755a1036ad6d6"
         },
         {
-            "m_Id": "cef55bf44a744c74b102f117c68ffdf0"
-        },
-        {
             "m_Id": "d9f7291b113642ef90d469c6acb1d364"
         },
         {
@@ -300,9 +297,6 @@
             },
             {
                 "m_Id": "c7b98c42f6854503a1c755a1036ad6d6"
-            },
-            {
-                "m_Id": "cef55bf44a744c74b102f117c68ffdf0"
             },
             {
                 "m_Id": "d9f7291b113642ef90d469c6acb1d364"
@@ -1540,21 +1534,6 @@
 {
     "m_SGVersion": 0,
     "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
-    "m_ObjectId": "79059d4895ac40148e362c0837d2f7b9",
-    "m_Id": 0,
-    "m_DisplayName": "Smoothness",
-    "m_SlotType": 0,
-    "m_Hidden": false,
-    "m_ShaderOutputName": "Smoothness",
-    "m_StageCapability": 2,
-    "m_Value": 0.5,
-    "m_DefaultValue": 0.5,
-    "m_Labels": []
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.Vector1MaterialSlot",
     "m_ObjectId": "7e5fa7cfaee542a399da9812810a6f7f",
     "m_Id": 4,
     "m_DisplayName": "R",
@@ -2213,39 +2192,6 @@
         "m_Guid": ""
     },
     "m_DefaultType": 0
-}
-
-{
-    "m_SGVersion": 0,
-    "m_Type": "UnityEditor.ShaderGraph.BlockNode",
-    "m_ObjectId": "cef55bf44a744c74b102f117c68ffdf0",
-    "m_Group": {
-        "m_Id": ""
-    },
-    "m_Name": "SurfaceDescription.Smoothness",
-    "m_DrawState": {
-        "m_Expanded": true,
-        "m_Position": {
-            "serializedVersion": "2",
-            "x": 0.0,
-            "y": 0.0,
-            "width": 0.0,
-            "height": 0.0
-        }
-    },
-    "m_Slots": [
-        {
-            "m_Id": "79059d4895ac40148e362c0837d2f7b9"
-        }
-    ],
-    "synonyms": [],
-    "m_Precision": 0,
-    "m_PreviewExpanded": true,
-    "m_PreviewMode": 0,
-    "m_CustomColors": {
-        "m_SerializableColors": []
-    },
-    "m_SerializedDescriptor": "SurfaceDescription.Smoothness"
 }
 
 {

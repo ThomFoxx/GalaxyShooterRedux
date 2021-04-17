@@ -7,7 +7,7 @@ public class SpawnManager : MonoBehaviour
     [SerializeField]
     private bool _horizontalFlight;
     [SerializeField]
-    private GameObject _enemyPrefab;
+    private GameObject _enemyPrefab, _explosionPrefab;
     [SerializeField]
     private GameObject[] _powerupPrefabs;
     [SerializeField]
@@ -15,16 +15,43 @@ public class SpawnManager : MonoBehaviour
     [SerializeField]
     private int _enemyCountLimit;
 
-    private bool _spawning = true;
+    private bool _spawning = false;
+
+    private static SpawnManager _instance;
+    public static SpawnManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+                Debug.LogError("Spawn Manager is Null!!!");
+
+            return _instance;
+        }
+    }
+
+    private void Awake()
+    {
+        _instance = this;
+    }
 
     private void OnEnable()
     {
         Player.OnPlayerDeath += PlayerDeath;
     }
+
     void Start()
     {
-        StartCoroutine(EnemySpawnRoutine());
-        StartCoroutine(PowerUpSpawnRoutine());
+        
+    }
+
+    public void StartSpawning()
+    {
+        if (!_spawning)
+        {
+            StartCoroutine(EnemySpawnRoutine());
+            StartCoroutine(PowerUpSpawnRoutine());
+            _spawning = true;
+        }
     }
 
     public void PlayerDeath()
@@ -34,6 +61,7 @@ public class SpawnManager : MonoBehaviour
 
     IEnumerator PowerUpSpawnRoutine()
     {
+        yield return new WaitForSeconds(5f);
         while(_spawning)
         {
             float RNGTime = Random.Range(3f, 5f);
@@ -61,6 +89,7 @@ public class SpawnManager : MonoBehaviour
 
     IEnumerator EnemySpawnRoutine()
     {
+        yield return new WaitForSeconds(3f);
         while (_spawning )
         {
             Vector3 launch;
@@ -93,6 +122,11 @@ public class SpawnManager : MonoBehaviour
             Enemy.transform.parent = _enemyContainer;
             Enemy.SetActive(true);
         }
+    }
+
+    public void SpawnExplosion(Vector3 BoomPOS)
+    {
+        Instantiate(_explosionPrefab, BoomPOS + new Vector3(0, 2, 0), Quaternion.identity);
     }
 
     private void OnDisable()

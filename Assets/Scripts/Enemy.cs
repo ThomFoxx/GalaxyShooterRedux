@@ -10,10 +10,13 @@ public class Enemy : MonoBehaviour
     [SerializeField]
     private float _speed;
     [SerializeField]
+    private Collider _collider;
+    [SerializeField]
     private int _pointValue;
     private bool _respawning = true;
     private Transform _pool;
     private Transform _container;
+    private bool _isExploding = false;
 
     public delegate void EnemyDeath(int pointValue);
     public static event EnemyDeath OnEnemyDeath;
@@ -41,7 +44,8 @@ public class Enemy : MonoBehaviour
 
     private void Movement()
     {
-        transform.Translate(Vector3.forward * _speed * Time.deltaTime, Space.Self);
+        if (!_isExploding)
+            transform.Translate(Vector3.forward * _speed * Time.deltaTime, Space.Self);
     }
 
     private void Respawn()
@@ -71,7 +75,8 @@ public class Enemy : MonoBehaviour
             if (other.transform.parent.TryGetComponent(out Laser laser))
                 laser.SendToPool();
 
-            SendToPool();
+            SpawnManager.Instance.SpawnExplosion(transform.position);
+            StartCoroutine(SendToPool());
             if (OnEnemyDeath != null)
                 OnEnemyDeath(_pointValue);
         }
@@ -80,7 +85,8 @@ public class Enemy : MonoBehaviour
             if (other.TryGetComponent(out Player player))
                 player.Damage();
 
-            SendToPool();
+            SpawnManager.Instance.SpawnExplosion(transform.position);
+            StartCoroutine(SendToPool());
             if (OnEnemyDeath != null)
                 OnEnemyDeath(_pointValue/2);
         }
@@ -90,12 +96,12 @@ public class Enemy : MonoBehaviour
                 if (_respawning)
                     transform.position = new Vector3(Random.Range(-20f, 20f), 0, Random.Range(20f,23f));
                 else
-                    SendToPool();
+                    StartCoroutine(SendToPool());
             else if (_horizontalFlight)
                 if (_respawning)
                     transform.position = new Vector3(0, Random.Range(-3.75f, 5.5f), Random.Range(15f,18f));
                 else
-                    SendToPool();
+                    StartCoroutine(SendToPool());
         }
     }
 
@@ -118,8 +124,13 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void SendToPool()
+    public IEnumerator SendToPool()
     {
+        _isExploding = true;
+        _collider.enabled = false;
+        yield return new WaitForSeconds(.25f);
+        _isExploding = false;
+        _collider.enabled = true;
         transform.parent = _pool;
     }
 }

@@ -34,6 +34,9 @@ public class Laser : MonoBehaviour
             transform.Translate(transform.TransformDirection(Vector3.forward) * _speed * Time.deltaTime, Space.World);
         else
             transform.parent = _pool;
+
+        if (transform.position.z > 14)
+            transform.parent = _pool;
     }
 
     private void OnTransformParentChanged()

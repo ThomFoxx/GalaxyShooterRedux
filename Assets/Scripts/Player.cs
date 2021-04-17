@@ -29,22 +29,24 @@ public class Player : MonoBehaviour
     private int _shieldCount;
     private Renderer _shieldRenderer;
     [SerializeField]
+    private GameObject[] _thrusters, _damagePoints;
+    [SerializeField]
     private bool _laserCanFire;
     [SerializeField]
-    [Tooltip("Active Cycle GO to effect any change in PlayMode")]
+    [Tooltip("'Active Cycle' GO to effect any change in PlayMode")]
     private float _laserCoolDown = .25f;
     private WaitForSeconds _laserCoolDownTimer;
     private float _tripleShotCooldownTimer = 0;
     private float _speedBoostCooldownTimer = 0;
     [SerializeField]
     private int _score;
+    private bool _isExploding = false;
 
 
     public delegate void PlayerDeath();
     public static event PlayerDeath OnPlayerDeath;
     public delegate void PlayerDamaged(int LivesCount);
     public static event PlayerDamaged OnPlayerDamaged;
-
 
     private void OnEnable()
     {
@@ -68,7 +70,8 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        Movement();
+        if (!_isExploding)
+            Movement();
 
         Weapon();
     }
@@ -94,6 +97,7 @@ public class Player : MonoBehaviour
             else if (transform.position.y <= -3.7f)
                 transform.position = new Vector3(0, -3.7f, transform.position.z);
 
+            ThrusterMaintence(horizontalInput);
         }
         else if (!_horizontalFlight)
         { //Top Down motion
@@ -110,10 +114,37 @@ public class Player : MonoBehaviour
                 transform.position = new Vector3(19.5f, 0, transform.position.z);
             else if (transform.position.x <= -19.5f)
                 transform.position = new Vector3(-19.5f, 0, transform.position.z);
-        }
 
+            ThrusterMaintence(verticalInput);
+        }        
     }
 
+    private void ThrusterMaintence(float Input)
+    {
+       
+           if (Input > 0)
+            {
+                foreach (GameObject Thruster in _thrusters)
+                {
+                    Thruster.GetComponent<Thrusters>().ForwardThrust();
+                }
+            }
+            else if (Input < 0)
+            {
+                foreach (GameObject Thruster in _thrusters)
+                {
+                    Thruster.GetComponent<Thrusters>().ReverseThrust();
+                }
+            }
+            else
+            {
+                foreach (GameObject Thruster in _thrusters)
+                {
+                    Thruster.GetComponent<Thrusters>().ZeroThrust();
+                }
+            }
+        }
+    
     private void Weapon()
     {
         if (Input.GetKey(KeyCode.Space) && _laserCanFire)
@@ -170,6 +201,7 @@ public class Player : MonoBehaviour
         if (!_shieldActive)
         {
             _lives--;
+            TriggerDamage();
             if (OnPlayerDamaged != null)
                 OnPlayerDamaged(_lives);
         }
@@ -185,8 +217,34 @@ public class Player : MonoBehaviour
             if (OnPlayerDeath != null)
                 OnPlayerDeath();
 
-            Destroy(this.gameObject);
+            _isExploding = true;
+            SpawnManager.Instance.SpawnExplosion(transform.position);
+            Destroy(this.gameObject,.25f);
         }
+    }
+
+    private void TriggerDamage()
+    {
+TryAgain:
+        int RNDDamage = Random.Range(0, _damagePoints.Length);
+        if (!_damagePoints[RNDDamage].activeInHierarchy)
+            _damagePoints[RNDDamage].SetActive(true);
+        else
+            goto TryAgain;
+    }
+
+    private void RepairDamage()
+    {
+TryAgain:
+        int RNDDamage = Random.Range(0, _damagePoints.Length);
+        if (_damagePoints[RNDDamage].activeInHierarchy)
+            _damagePoints[RNDDamage].SetActive(false);
+        else
+            goto TryAgain;
+
+        _lives++;
+        if (OnPlayerDamaged != null)
+            OnPlayerDamaged(_lives);
     }
 
     private void EnemyDeath(int PointValue)
