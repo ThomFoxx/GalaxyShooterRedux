@@ -9,6 +9,8 @@ public class Player : MonoBehaviour
     [SerializeField]
     private bool _horizontalFlight;
     [SerializeField]
+    private GameObject _shipObject;
+    [SerializeField]
     private float _speed = 5;
     [SerializeField]
     private float _speedBoostMultipler = 1;
@@ -53,7 +55,7 @@ public class Player : MonoBehaviour
         _laserCoolDownTimer = new WaitForSeconds(_laserCoolDown);
         Enemy.OnEnemyDeath += EnemyDeath;
     }
-     
+
     void Start()
     {
         if (_laserPool == null)
@@ -116,39 +118,57 @@ public class Player : MonoBehaviour
                 transform.position = new Vector3(-19.5f, 0, transform.position.z);
 
             ThrusterMaintence(verticalInput);
-        }        
+            RollControl(horizontalInput);
+        }
     }
 
     private void ThrusterMaintence(float Input)
     {
-       
-           if (Input > 0)
+
+        if (Input > 0)
+        {
+            foreach (GameObject Thruster in _thrusters)
             {
-                foreach (GameObject Thruster in _thrusters)
-                {
-                    Thruster.GetComponent<Thrusters>().ForwardThrust();
-                }
-            }
-            else if (Input < 0)
-            {
-                foreach (GameObject Thruster in _thrusters)
-                {
-                    Thruster.GetComponent<Thrusters>().ReverseThrust();
-                }
-            }
-            else
-            {
-                foreach (GameObject Thruster in _thrusters)
-                {
-                    Thruster.GetComponent<Thrusters>().ZeroThrust();
-                }
+                Thruster.GetComponent<Thrusters>().ForwardThrust();
             }
         }
-    
+        else if (Input < 0)
+        {
+            foreach (GameObject Thruster in _thrusters)
+            {
+                Thruster.GetComponent<Thrusters>().ReverseThrust();
+            }
+        }
+        else
+        {
+            foreach (GameObject Thruster in _thrusters)
+            {
+                Thruster.GetComponent<Thrusters>().ZeroThrust();
+            }
+        }
+    }
+
+    private void RollControl(float Input)
+    {
+        float roll = 0;
+        Quaternion setRoll;
+        if (Input > 0 || Input < 0)
+        {
+            roll = Input * 45;
+        }
+        else
+        {
+            roll = 0;
+        }
+        setRoll = Quaternion.Euler(roll, 90, 0);
+        _shipObject.transform.rotation = setRoll;
+    }
+
     private void Weapon()
     {
         if (Input.GetKey(KeyCode.Space) && _laserCanFire)
         {
+            int RND = Random.Range(11, 30);
             if (_tripleShotActive) //Triple Shot
             {
                 foreach (Transform laser in _tripleShotOffset)
@@ -163,6 +183,7 @@ public class Player : MonoBehaviour
                 }
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
+                PlaySFX(2);
             }
             else //Normal Shot
             {
@@ -170,11 +191,11 @@ public class Player : MonoBehaviour
                 if (_laserPool.childCount < 1)
                     Instantiate(_laserPrefab, launch, transform.rotation, this.transform);
                 else
-                {
                     PullLaserFromPool(launch, _laserOffset);
-                }
+
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
+                PlaySFX(2);
             }
 
         }
@@ -201,9 +222,21 @@ public class Player : MonoBehaviour
         if (!_shieldActive)
         {
             _lives--;
-            TriggerDamage();
             if (OnPlayerDamaged != null)
                 OnPlayerDamaged(_lives);
+
+            if (_lives < 1)
+            {
+                if (OnPlayerDeath != null)
+                    OnPlayerDeath();
+
+                _isExploding = true;
+                SpawnManager.Instance.SpawnExplosion(transform.position);
+                PlaySFX(1);
+                Destroy(this.gameObject, .25f);
+            }
+            else
+                TriggerDamage();
         }
         else if (_shieldCount >= 1)
         {
@@ -212,15 +245,7 @@ public class Player : MonoBehaviour
         }
 
 
-        if (_lives < 1)
-        {
-            if (OnPlayerDeath != null)
-                OnPlayerDeath();
 
-            _isExploding = true;
-            SpawnManager.Instance.SpawnExplosion(transform.position);
-            Destroy(this.gameObject,.25f);
-        }
     }
 
     private void TriggerDamage()
@@ -245,6 +270,11 @@ TryAgain:
         _lives++;
         if (OnPlayerDamaged != null)
             OnPlayerDamaged(_lives);
+    }
+
+    private void PlaySFX(int SFXGroup)
+    {
+        AudioManager.Instance.PlaySFX(SFXGroup);
     }
 
     private void EnemyDeath(int PointValue)
@@ -335,10 +365,10 @@ TryAgain:
     }
 
     IEnumerator ShieldPowerDownRoutine()
-    {        
+    {
         float powerStep = 1.5f;
         float power = _shieldRenderer.material.GetFloat("_power");
-        float nextPower =  power + powerStep;
+        float nextPower = power + powerStep;
         while (power < nextPower)
         {
             yield return new WaitForEndOfFrame();
@@ -347,10 +377,10 @@ TryAgain:
         }
         power = nextPower;
         _shieldRenderer.material.SetFloat("_power", power);
-        yield return new WaitForSeconds(.33f);
-        if (_shieldCount ==0)
+        if (_shieldCount == 0)
         {
-            while(power > -3f)
+            yield return new WaitForSeconds(.33f);
+            while (power > -3f)
             {
                 yield return new WaitForEndOfFrame();
                 power -= Time.deltaTime * 20;

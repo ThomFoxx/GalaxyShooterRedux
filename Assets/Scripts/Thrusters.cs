@@ -61,7 +61,7 @@ public class Thrusters : MonoBehaviour
         int frame = 0;
         while(true)
         {
-            yield return new WaitForEndOfFrame();
+            yield return new WaitForSecondsRealtime(.033f);
             _thrusterFlame.SetTexture("_thruster", _animationFrames[frame]);
             frame++;
             if (frame > _animationFrames.Length - 1)

@@ -76,6 +76,7 @@ public class Enemy : MonoBehaviour
                 laser.SendToPool();
 
             SpawnManager.Instance.SpawnExplosion(transform.position);
+            PlaySFX();
             StartCoroutine(SendToPool());
             if (OnEnemyDeath != null)
                 OnEnemyDeath(_pointValue);
@@ -86,6 +87,7 @@ public class Enemy : MonoBehaviour
                 player.Damage();
 
             SpawnManager.Instance.SpawnExplosion(transform.position);
+            PlaySFX();
             StartCoroutine(SendToPool());
             if (OnEnemyDeath != null)
                 OnEnemyDeath(_pointValue/2);
@@ -103,6 +105,11 @@ public class Enemy : MonoBehaviour
                 else
                     StartCoroutine(SendToPool());
         }
+    }
+    
+    private void PlaySFX()
+    {
+        AudioManager.Instance.PlaySFX(1);
     }
 
     private void PlayerDeath()

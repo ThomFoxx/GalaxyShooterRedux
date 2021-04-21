@@ -97,7 +97,7 @@ Material:
     - _ZTestGBuffer: 4
     - _ZTestTransparent: 4
     - _ZWrite: 1
-    - _power: -2
+    - _power: 1.5
     m_Colors:
     - Color_07e9881b968942a7a3a4c3c715363bc6: {r: 0, g: 48.439217, b: 51.70196, a: 0}
     - Color_5f71f9fb7cec42aebb42be1d84ebeca9: {r: 3.6705883, g: 0, b: 0.078431375, a: 0}

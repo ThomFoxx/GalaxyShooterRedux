@@ -31,10 +31,16 @@ public class Asteroid : MonoBehaviour
         {
             laser.SendToPool();
             SpawnManager.Instance.SpawnExplosion(transform.position);
+            PlaySFX();
             _collider.enabled = false;
             Destroy(this.gameObject, .5f);
             if (_isStarterAsteroid)
                 SpawnManager.Instance.StartSpawning();
         }
+    }
+
+    private void PlaySFX()
+    {
+        AudioManager.Instance.PlaySFX(1,0);
     }
 }
