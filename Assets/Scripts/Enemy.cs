@@ -29,9 +29,9 @@ public class Enemy : MonoBehaviour
     void Start()
     {
         if (_pool == null)
-            _pool = GameObject.Find("EnemyPool").transform;
+            _pool = GameObject.Find("Enemy_Pool").transform;
         if (_container == null)
-            _container = GameObject.Find("EnemyContainer").transform;
+            _container = GameObject.Find("Enemy_Container").transform;
     }
 
     // Update is called once per frame
@@ -135,7 +135,7 @@ public class Enemy : MonoBehaviour
     {
         _isExploding = true;
         _collider.enabled = false;
-        yield return new WaitForSeconds(.25f);
+        yield return new WaitForSeconds(.33f);
         _isExploding = false;
         _collider.enabled = true;
         transform.parent = _pool;

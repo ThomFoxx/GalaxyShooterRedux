@@ -10,13 +10,12 @@ Material:
   m_Name: Shield
   m_Shader: {fileID: -6465566751694194690, guid: aaf8b84437b33b244818cbf5d49bb6e0, type: 3}
   m_ShaderKeywords: _DOUBLESIDED_ON _SURFACE_TYPE_TRANSPARENT _TRANSPARENT_WRITES_MOTION_VEC
-  m_LightmapFlags: 4
+  m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 3000
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
   stringTagMap:
     MotionVector: User
-    RenderType: Transparent
   disabledShaderPasses:
   - MOTIONVECTORS
   - TransparentDepthPostpass
@@ -47,6 +46,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - Vector1_5523cad9bf2344148ff1a0e375f27b8a: 23.48
+    - Vector1_59bdd22c8ef44a0bb7f88661a9dc9408: 1
     - Vector1_5e4feed5425a4c9ba68473e176241ad2: 0.3
     - Vector1_f42b28224a974c1d8b542d9efe57212c: 1.5
     - _AddPrecomputedVelocity: 0
@@ -99,7 +99,7 @@ Material:
     - _ZWrite: 1
     - _power: 1.5
     m_Colors:
-    - Color_07e9881b968942a7a3a4c3c715363bc6: {r: 0, g: 48.439217, b: 51.70196, a: 0}
+    - Color_07e9881b968942a7a3a4c3c715363bc6: {r: 0, g: 51.701942, b: 39.543488, a: 1}
     - Color_5f71f9fb7cec42aebb42be1d84ebeca9: {r: 3.6705883, g: 0, b: 0.078431375, a: 0}
     - Vector2_1127f5e159cd4f709f19a98fb13b164b: {r: 3, g: 3, b: 0, a: 0}
     - Vector2_7d5b5d6918d64732add04e5117e2c49c: {r: 3, g: 3, b: 0, a: 0}

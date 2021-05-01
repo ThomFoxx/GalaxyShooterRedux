@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.VFX;
 
 public class Thrusters : MonoBehaviour
 {
@@ -10,7 +9,7 @@ public class Thrusters : MonoBehaviour
     [SerializeField]
     private Vector3 _position;
     [SerializeField]
-    private VisualEffect _thrusterFlame;
+    private Renderer _thrusterFlame;
     [SerializeField]
     private Texture2D[] _animationFrames;
     private int _thrustMode = 0; // -1 = Reverse, 0 = Zero, 1 = Forward
@@ -29,8 +28,8 @@ public class Thrusters : MonoBehaviour
     {
         if (_thrustMode != 1)
         {
-            _thrusterFlame.transform.localScale = _scale * 2;
-            transform.localPosition = new Vector3(0, _position.y, _position.z-.5f);
+            _thrusterFlame.transform.localScale = _scale * 1.5f;
+            transform.localPosition = new Vector3(0, _position.y, _position.z-.3f);
             _thrustMode = 1;
         }
     }
@@ -62,7 +61,7 @@ public class Thrusters : MonoBehaviour
         while(true)
         {
             yield return new WaitForSecondsRealtime(.033f);
-            _thrusterFlame.SetTexture("_thruster", _animationFrames[frame]);
+            _thrusterFlame.material.SetTexture("_thruster", _animationFrames[frame]);
             frame++;
             if (frame > _animationFrames.Length - 1)
                 frame = 0;

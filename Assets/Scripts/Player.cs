@@ -59,10 +59,10 @@ public class Player : MonoBehaviour
     void Start()
     {
         if (_laserPool == null)
-            _laserPool = GameObject.Find("LaserPool").transform;
+            _laserPool = GameObject.Find("Laser_Pool").transform;
         else
         {
-            GameObject Pool = new GameObject("LaserPool");
+            GameObject Pool = new GameObject("Laser_Pool");
             _laserPool = Pool.transform;
         }
 
@@ -167,8 +167,7 @@ public class Player : MonoBehaviour
     private void Weapon()
     {
         if (Input.GetKey(KeyCode.Space) && _laserCanFire)
-        {
-            int RND = Random.Range(11, 30);
+        {            
             if (_tripleShotActive) //Triple Shot
             {
                 foreach (Transform laser in _tripleShotOffset)

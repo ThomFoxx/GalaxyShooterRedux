@@ -33,7 +33,7 @@ public class Asteroid : MonoBehaviour
             SpawnManager.Instance.SpawnExplosion(transform.position);
             PlaySFX();
             _collider.enabled = false;
-            Destroy(this.gameObject, .5f);
+            Destroy(this.gameObject, .6f);
             if (_isStarterAsteroid)
                 SpawnManager.Instance.StartSpawning();
         }

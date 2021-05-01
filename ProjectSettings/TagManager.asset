@@ -4,17 +4,17 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Laser
-  - Enemy
   - PowerUp
+  - Enemy
+  - Laser
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - PostProcessing
   - Water
   - UI
-  - PostProcessing
+  - 
   - 
   - 
   - 

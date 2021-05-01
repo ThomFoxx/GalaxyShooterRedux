@@ -24,11 +24,15 @@ public class GameManager : MonoBehaviour
         _instance = this;
     }
 
+    private void OnEnable()
+    {
+        Player.OnPlayerDeath += PlayerDeath;
+    }
+
     private void Update()
     {
         if(_isGameOver && Input.GetKeyDown(KeyCode.R))
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-
     }
 
     public void GameOver(bool flag)
@@ -39,5 +43,21 @@ public class GameManager : MonoBehaviour
     public bool IsGameOver()
     {
         return _isGameOver;
+    }
+
+    private void PlayerDeath()
+    {
+        StartCoroutine(TitleCountDown());
+    }
+
+    private IEnumerator TitleCountDown()
+    {
+        yield return new WaitForSecondsRealtime(60);
+        SceneManager.LoadScene(0);
+    }
+
+    private void OnDisable()
+    {
+        Player.OnPlayerDeath -= PlayerDeath;
     }
 }

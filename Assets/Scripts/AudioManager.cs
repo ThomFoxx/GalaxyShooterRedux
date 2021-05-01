@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 
 public class AudioManager : MonoBehaviour
@@ -35,6 +34,10 @@ public class AudioManager : MonoBehaviour
         _instance = this;
     }
 
+    /// <summary>
+    /// Plays a Sound Effect from the AudioManager.
+    /// </summary>
+    /// <param name="SFXGroup">0 = General, 1 = Explosion, 2 = Laser</param>    
     public void PlaySFX(int SFXGroup, int ClipId)
     {
         switch (SFXGroup)
@@ -54,6 +57,10 @@ public class AudioManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Plays a Random Sound Effect from the AudioManager.
+    /// </summary>
+    /// <param name="SFXGroup">0 = General, 1 = Explosion, 2 = Laser</param> 
     public void PlaySFX(int SFXGroup)
     {
         int RND = 0;

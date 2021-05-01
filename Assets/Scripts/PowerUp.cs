@@ -21,7 +21,8 @@ public class PowerUp : MonoBehaviour
     {
         if (other.TryGetComponent<Player>(out Player player))
         {
-            player.PowerUp(_type);
+            player.PowerUp(_type);            
+            AudioManager.Instance.PlaySFX(0, 0);
             Destroy(gameObject);
         }
     }

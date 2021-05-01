@@ -14,9 +14,9 @@ public class Laser : MonoBehaviour
     void Start()
     {
         if (_pool == null)
-            _pool = GameObject.Find("LaserPool").transform;
+            _pool = GameObject.Find("Laser_Pool").transform;
         if (_container == null)
-            _container = GameObject.Find("LaserContainer").transform;
+            _container = GameObject.Find("Laser_Container").transform;
         if (_lastOwner == null)
             SetLastOwner(transform.parent);
         
