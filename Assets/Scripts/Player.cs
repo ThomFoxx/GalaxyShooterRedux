@@ -242,9 +242,6 @@ public class Player : MonoBehaviour
             _shieldCount--;
             StartCoroutine(ShieldPowerDownRoutine());
         }
-
-
-
     }
 
     private void TriggerDamage()

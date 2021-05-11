@@ -17,6 +17,15 @@ public class Enemy : MonoBehaviour
     private Transform _pool;
     private Transform _container;
     private bool _isExploding = false;
+    private Transform _laserPool;
+    [SerializeField]
+    private Transform _laserOffset;
+    [SerializeField]
+    private GameObject _laserPrefab;
+    [SerializeField]
+    private bool _laserCanFire = true;
+    [SerializeField]
+    private Vector2 _laserCoolDown = new Vector2(3,7);
 
     public delegate void EnemyDeath(int pointValue);
     public static event EnemyDeath OnEnemyDeath;
@@ -32,13 +41,15 @@ public class Enemy : MonoBehaviour
             _pool = GameObject.Find("Enemy_Pool").transform;
         if (_container == null)
             _container = GameObject.Find("Enemy_Container").transform;
+        if (_laserPool == null)
+            _laserPool = GameObject.Find("Laser_Pool").transform;
     }
 
     // Update is called once per frame
     void Update()
     {
         Movement();
-
+        Weapon();
         Respawn();
     }
 
@@ -46,6 +57,39 @@ public class Enemy : MonoBehaviour
     {
         if (!_isExploding)
             transform.Translate(Vector3.forward * _speed * Time.deltaTime, Space.Self);
+    }
+
+    private void Weapon()
+    {
+        if (_laserCanFire)
+        {
+            Vector3 launch = _laserOffset.position;
+            if (_laserPool.childCount < 1)
+                Instantiate(_laserPrefab, launch, transform.rotation, this.transform);
+            else
+                PullLaserFromPool(launch, _laserOffset);
+
+            _laserCanFire = false;
+            StartCoroutine(LaserReloadTimer());
+            PlaySFX(2);
+        }
+    }
+
+    private void PullLaserFromPool(Vector3 LaunchPOS, Transform Offset)
+    {
+        GameObject laserTemp = _laserPool.GetChild(0).gameObject;
+        laserTemp.transform.parent = this.transform;
+        laserTemp.transform.position = LaunchPOS;
+        laserTemp.transform.rotation = Offset.rotation;
+        laserTemp.GetComponent<Laser>().SetLastOwner(this.transform);
+        laserTemp.SetActive(true);
+    }
+
+    IEnumerator LaserReloadTimer()
+    {
+        float RNG = Random.Range(_laserCoolDown.x, _laserCoolDown.y);
+        yield return new WaitForSeconds(RNG);
+        _laserCanFire = true;
     }
 
     private void Respawn()
@@ -73,13 +117,18 @@ public class Enemy : MonoBehaviour
         if (other.CompareTag("Laser"))
         {
             if (other.transform.parent.TryGetComponent(out Laser laser))
-                laser.SendToPool();
+            {
+                if (laser.ReportLastOwner().CompareTag("Player"))
+                {
+                    laser.SendToPool();
 
-            SpawnManager.Instance.SpawnExplosion(transform.position);
-            PlaySFX();
-            StartCoroutine(SendToPool());
-            if (OnEnemyDeath != null)
-                OnEnemyDeath(_pointValue);
+                    SpawnManager.Instance.SpawnExplosion(transform.position);
+                    PlaySFX(1);
+                    StartCoroutine(SendToPool());
+                    if (OnEnemyDeath != null)
+                        OnEnemyDeath(_pointValue);
+                }
+            }
         }
         else if (other.CompareTag("Player"))
         {
@@ -87,7 +136,7 @@ public class Enemy : MonoBehaviour
                 player.Damage();
 
             SpawnManager.Instance.SpawnExplosion(transform.position);
-            PlaySFX();
+            PlaySFX(1);
             StartCoroutine(SendToPool());
             if (OnEnemyDeath != null)
                 OnEnemyDeath(_pointValue/2);
@@ -106,10 +155,10 @@ public class Enemy : MonoBehaviour
                     StartCoroutine(SendToPool());
         }
     }
-    
-    private void PlaySFX()
+
+    private void PlaySFX(int SFXGroup)
     {
-        AudioManager.Instance.PlaySFX(1);
+        AudioManager.Instance.PlaySFX(SFXGroup);
     }
 
     private void PlayerDeath()
