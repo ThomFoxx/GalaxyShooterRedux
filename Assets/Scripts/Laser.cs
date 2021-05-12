@@ -41,9 +41,9 @@ public class Laser : MonoBehaviour
         else
             transform.Translate(transform.TransformDirection(Vector3.forward) * _speed * Time.deltaTime, Space.World);
 
-        if (transform.position.z > 7 && _lastOwner.CompareTag("Player"))
+        if (transform.position.z > 14 && _lastOwner.CompareTag("Player"))
             transform.parent = _pool;
-        else if (transform.position.z < -10 && _lastOwner.CompareTag("Enemy"))
+        else if (transform.position.z < -14 && _lastOwner.CompareTag("Enemy"))
             transform.parent = _pool;
     }
 
@@ -62,8 +62,8 @@ public class Laser : MonoBehaviour
 
     public void SetLastOwner(Transform parent)
     {
-        _lastOwner = parent;
         transform.parent = _container;
+        _lastOwner = parent;        
     }
 
     public Transform ReportLastOwner()

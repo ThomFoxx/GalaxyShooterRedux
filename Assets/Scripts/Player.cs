@@ -13,6 +13,7 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float _speed = 5;
     [SerializeField]
+    private float _speedPowerUpAmount = 1.5f;
     private float _speedBoostMultipler = 1;
     private Vector3 _direction;
     [SerializeField]
@@ -43,6 +44,12 @@ public class Player : MonoBehaviour
     [SerializeField]
     private int _score;
     private bool _isExploding = false;
+    [SerializeField]
+    private float _thrusterBoostAmount;
+    private float _thrusterBoostMultiplier;
+    [SerializeField]
+    [Tooltip("For Debugging/Testing")]
+    private float Speed;
 
 
     public delegate void PlayerDeath();
@@ -72,6 +79,7 @@ public class Player : MonoBehaviour
 
     void Update()
     {
+        Thruster();
         if (!_isExploding)
             Movement();
 
@@ -106,7 +114,10 @@ public class Player : MonoBehaviour
             horizontalInput = Input.GetAxis("Horizontal");
             verticalInput = Input.GetAxis("Vertical");
             _direction = new Vector3(horizontalInput, 0, verticalInput);
-            transform.Translate(_direction * _speed * _speedBoostMultipler * Time.deltaTime);
+            transform.Translate(_direction * _speed * _speedBoostMultipler * _thrusterBoostMultiplier * Time.deltaTime);
+
+            //For Tracking the Speed Changes in Inspector. REMOVE LATER. ~THK~
+            Speed = _speed * _speedBoostMultipler * _thrusterBoostMultiplier;
 
             if (transform.position.z >= 0)
                 transform.position = new Vector3(transform.position.x, 0, 0);
@@ -120,6 +131,15 @@ public class Player : MonoBehaviour
             ThrusterMaintence(verticalInput);
             RollControl(horizontalInput);
         }
+    }
+
+   private void Thruster()
+    {
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            _thrusterBoostMultiplier = _thrusterBoostAmount;
+        }
+        else _thrusterBoostMultiplier = 1;
     }
 
     private void ThrusterMaintence(float Input)
@@ -322,7 +342,7 @@ TryAgain:
     IEnumerator SpeedBoostRoutine()
     {
         _speedBoostActive = true;
-        _speedBoostMultipler = 2.5f;
+        _speedBoostMultipler = _speedPowerUpAmount;
         while (_speedBoostActive)
         {
             yield return new WaitForEndOfFrame();
