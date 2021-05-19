@@ -297,7 +297,7 @@ public class Player : MonoBehaviour
                 Destroy(this.gameObject, .25f);
             }
             else
-                TriggerDamage();
+                StartCoroutine(TriggerDamage());
         }
         else if (_shieldCount >= 1)
         {
@@ -307,25 +307,36 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void TriggerDamage()
+    private IEnumerator TriggerDamage()
     {
-TryAgain:
-        int RNDDamage = Random.Range(0, _damagePoints.Length);
-        if (!_damagePoints[RNDDamage].activeInHierarchy)
-            _damagePoints[RNDDamage].SetActive(true);
-        else
-            goto TryAgain;
+        bool triggered = false;
+        int RNDDamage;
+        while (!triggered)
+        {
+            yield return new WaitForEndOfFrame();
+            RNDDamage = Random.Range(0, _damagePoints.Length);
+            if (!_damagePoints[RNDDamage].activeInHierarchy)
+            {
+                _damagePoints[RNDDamage].SetActive(true);
+                triggered = true;
+            }         
+        }
     }
 
-    private void RepairDamage()
+    private IEnumerator RepairDamage()
     {
-TryAgain:
-        int RNDDamage = Random.Range(0, _damagePoints.Length);
-        if (_damagePoints[RNDDamage].activeInHierarchy)
-            _damagePoints[RNDDamage].SetActive(false);
-        else
-            goto TryAgain;
-
+        bool triggered = false;
+        int RNDDamage;
+        while (!triggered)
+        {
+            yield return new WaitForEndOfFrame();
+            RNDDamage = Random.Range(0, _damagePoints.Length);
+            if (_damagePoints[RNDDamage].activeInHierarchy)
+            {
+                _damagePoints[RNDDamage].SetActive(false);
+                triggered = true;
+            }
+        }
         _lives++;
         if (OnPlayerDamaged != null)
             OnPlayerDamaged(_lives);
@@ -366,6 +377,10 @@ TryAgain:
                 break;
             case 3:
                 Reload();
+                break;
+            case 4:
+                if (_lives < 3)
+                    StartCoroutine(RepairDamage());
                 break;
             default:
                 break;
@@ -477,7 +492,6 @@ TryAgain:
             _shield.SetActive(false);
         }
     }
-
 
     private void OnDisable()
     {

@@ -1201,6 +1201,7 @@ MonoBehaviour:
   - {fileID: 2873270517270004929, guid: 85756ddcc3cec3243b75721c1dae3a81, type: 3}
   - {fileID: 5319990179745213460, guid: 22d3718a7f16eb04ca292c3b2bfea9f0, type: 3}
   - {fileID: 8594433859886140783, guid: 532fca1c07947f644acd74fc13c01914, type: 3}
+  - {fileID: 3019228397244552690, guid: 54b16dbabd8a7d040b7351a0bc816c2b, type: 3}
   _enemyPool: {fileID: 576597763}
   _enemyContainer: {fileID: 1737893610}
   _enemyCountLimit: 75
