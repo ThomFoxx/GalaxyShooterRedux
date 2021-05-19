@@ -75,4 +75,15 @@ public class Laser : MonoBehaviour
     {
         transform.parent = _pool;
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (!_lastOwner.CompareTag("Player") && other.CompareTag("Player"))
+        {
+            if (other.TryGetComponent(out Player player))
+                player.Damage();
+
+            Destroy(this.gameObject);
+        }
+    }
 }

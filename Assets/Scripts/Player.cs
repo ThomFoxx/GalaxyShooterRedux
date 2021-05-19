@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
@@ -31,6 +32,11 @@ public class Player : MonoBehaviour
     private GameObject _shield;
     private int _shieldCount;
     private Renderer _shieldRenderer;
+    [SerializeField]
+    private float[] _shieldPowerLevels;
+    [SerializeField]
+    private Image _shieldPowerImage;
+    private Material _shieldPowerMaterial;
     [SerializeField]
     private GameObject[] _thrusters, _damagePoints;
     [SerializeField]
@@ -75,11 +81,13 @@ public class Player : MonoBehaviour
 
         transform.position = Vector3.zero;
         _shieldRenderer = _shield.GetComponent<Renderer>();
+        _shieldPowerImage.material.SetFloat("_visibility", _shieldPowerLevels[_shieldCount]);
     }
 
     void Update()
     {
         Thruster();
+
         if (!_isExploding)
             Movement();
 
@@ -90,6 +98,7 @@ public class Player : MonoBehaviour
     {
         float horizontalInput;
         float verticalInput;
+        Vector3 totalDirection;
 
         if (_horizontalFlight)
         { //Side scroll motion
@@ -114,7 +123,8 @@ public class Player : MonoBehaviour
             horizontalInput = Input.GetAxis("Horizontal");
             verticalInput = Input.GetAxis("Vertical");
             _direction = new Vector3(horizontalInput, 0, verticalInput);
-            transform.Translate(_direction * _speed * _speedBoostMultipler * _thrusterBoostMultiplier * Time.deltaTime);
+            totalDirection = _direction * _speed * _speedBoostMultipler * _thrusterBoostMultiplier * Time.deltaTime;
+            transform.Translate(totalDirection);
 
             //For Tracking the Speed Changes in Inspector. REMOVE LATER. ~THK~
             Speed = _speed * _speedBoostMultipler * _thrusterBoostMultiplier;
@@ -133,7 +143,7 @@ public class Player : MonoBehaviour
         }
     }
 
-   private void Thruster()
+    private void Thruster()
     {
         if (Input.GetKey(KeyCode.LeftShift))
         {
@@ -187,7 +197,7 @@ public class Player : MonoBehaviour
     private void Weapon()
     {
         if (Input.GetKey(KeyCode.Space) && _laserCanFire)
-        {            
+        {
             if (_tripleShotActive) //Triple Shot
             {
                 foreach (Transform laser in _tripleShotOffset)
@@ -260,6 +270,7 @@ public class Player : MonoBehaviour
         else if (_shieldCount >= 1)
         {
             _shieldCount--;
+            _shieldPowerImage.material.SetFloat("_visibility", _shieldPowerLevels[_shieldCount]);
             StartCoroutine(ShieldPowerDownRoutine());
         }
     }
@@ -363,11 +374,15 @@ TryAgain:
         _shield.SetActive(true);
         float power = 12f;
         _shieldRenderer.material.SetFloat("_power", power);
+        float powerLevel = 0;
+
         while (power > -0.5f)
         {
             yield return new WaitForEndOfFrame();
+            powerLevel += Time.deltaTime * 4.5f;
             power -= Time.deltaTime * 15;
             _shieldRenderer.material.SetFloat("_power", power);
+            _shieldPowerImage.material.SetFloat("_visibility", powerLevel);
         }
         while (power < 1.5f)
         {
@@ -375,6 +390,7 @@ TryAgain:
             power += Time.deltaTime * 5;
             _shieldRenderer.material.SetFloat("_power", power);
         }
+        _shieldPowerImage.material.SetFloat("_visibility", _shieldPowerLevels[_shieldCount]);
         power = 1.5f;
         _shieldRenderer.material.SetFloat("_power", power);
 
@@ -409,6 +425,7 @@ TryAgain:
         }
     }
 
+    
     private void OnDisable()
     {
         Enemy.OnEnemyDeath -= EnemyDeath;
