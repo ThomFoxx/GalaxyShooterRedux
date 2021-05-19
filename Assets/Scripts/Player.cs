@@ -28,11 +28,14 @@ public class Player : MonoBehaviour
     [Tooltip("Triple Shot Offset")]
     private Transform[] _tripleShotOffset;
     [SerializeField]
+    [Tooltip("Spread Shot Offset")]
+    private Transform[] _spreadShotOffset;
+    [SerializeField]
     [Tooltip("Normal Shot Offset")]
     private Transform _sparkOffset;
     private Transform _laserPool;
     [SerializeField]
-    private bool _tripleShotActive, _speedBoostActive, _shieldActive;
+    private bool _tripleShotActive, _speedBoostActive, _shieldActive, _spreadShotActive;
     [SerializeField]
     private GameObject _shield;
     private int _shieldCount;
@@ -41,7 +44,6 @@ public class Player : MonoBehaviour
     private float[] _shieldPowerLevels;
     [SerializeField]
     private Image _shieldPowerImage;
-    private Material _shieldPowerMaterial;
     [SerializeField]
     private GameObject[] _thrusters, _damagePoints;
     [SerializeField]
@@ -52,6 +54,7 @@ public class Player : MonoBehaviour
     private WaitForSeconds _laserCoolDownTimer;
     private float _tripleShotCooldownTimer = 0;
     private float _speedBoostCooldownTimer = 0;
+    private float _spreadShotCooldownTimer = 0;
     [SerializeField]
     private int _score;
     private bool _isExploding = false;
@@ -63,6 +66,15 @@ public class Player : MonoBehaviour
     private int _ammoClip;
     [SerializeField]
     private int _maxAmmo;
+    [SerializeField]
+    private float _thrusterPowerMax = 5;
+    [SerializeField]
+    private float _thrusterPower;
+    [SerializeField]
+    private Image _thrusterPowerImage;
+    [SerializeField]
+    private bool _canThrust = true;
+    private bool _thrusterActive = false;
 
 
     [SerializeField]
@@ -103,6 +115,9 @@ public class Player : MonoBehaviour
             OnReloadAmmo(_ammoCount, _maxAmmo);
         if (OnAmmoTypeChange != null)
             OnAmmoTypeChange(0);
+
+        _thrusterPower = _thrusterPowerMax;
+        _thrusterPowerImage.material.SetFloat("_visibility", _thrusterPower);
     }
 
     void Update()
@@ -137,7 +152,7 @@ public class Player : MonoBehaviour
             else if (transform.position.y <= -3.7f)
                 transform.position = new Vector3(0, -3.7f, transform.position.z);
 
-            ThrusterMaintence(horizontalInput);
+            EngineMaintence(horizontalInput);
         }
         else if (!_horizontalFlight)
         { //Top Down motion
@@ -159,21 +174,65 @@ public class Player : MonoBehaviour
             else if (transform.position.x <= -22f)
                 transform.position = new Vector3(-22f, 0, transform.position.z);
 
-            ThrusterMaintence(verticalInput);
+            EngineMaintence(verticalInput);
             RollControl(horizontalInput);
         }
     }
 
     private void Thruster()
     {
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (Input.GetKey(KeyCode.LeftShift) && _thrusterPower > 0 && _canThrust)
         {
             _thrusterBoostMultiplier = _thrusterBoostAmount;
+            StopCoroutine(ThrusterPowerUp());
+            if (!_thrusterActive)
+                StartCoroutine(ThrusterPowerDown());
         }
-        else _thrusterBoostMultiplier = 1;
+        else 
+        {
+            _thrusterActive = false;
+            _thrusterBoostMultiplier = 1;
+            StopCoroutine(ThrusterPowerDown());
+        }
+        if (Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            StopCoroutine(ThrusterPowerDown());
+            _thrusterActive = false;
+            StartCoroutine(ThrusterPowerUp());
+        }
+        
     }
 
-    private void ThrusterMaintence(float Input)
+    private IEnumerator ThrusterPowerDown()
+    {
+        _thrusterActive = true;
+        while (_thrusterPower > 0 && _thrusterActive)
+        {
+            yield return new WaitForEndOfFrame();
+            _thrusterPower -= Time.deltaTime;
+            _thrusterPowerImage.material.SetFloat("_visibility", _thrusterPower);
+            if (_thrusterPower < _thrusterPowerMax * .25f)
+                _canThrust = false;
+        }
+        _thrusterActive = false;
+        if (_thrusterPower < 0)
+            _thrusterPower = 0;
+    }
+
+    private IEnumerator ThrusterPowerUp()
+    {
+        while (_thrusterPower < 5)
+        {
+            yield return new WaitForEndOfFrame();
+            _thrusterPower += Time.deltaTime/2;
+            _thrusterPowerImage.material.SetFloat("_visibility", _thrusterPower);
+        }
+        _canThrust = true;
+            if (_thrusterPower > 5)
+            _thrusterPower = 5;
+    }
+
+    private void EngineMaintence(float Input)
     {
 
         if (Input > 0)
@@ -236,7 +295,24 @@ public class Player : MonoBehaviour
                 PlaySFX(2);
                 _ammoCount--;
             }
-            else //Normal Shot
+            if (_spreadShotActive) //Triple Shot
+            {
+                foreach (Transform laser in _spreadShotOffset)
+                {
+                    Vector3 launch = laser.position;
+                    if (_laserPool.childCount < 1)
+                        Instantiate(_laserPrefab, launch, laser.rotation, this.transform);
+                    else
+                    {
+                        PullLaserFromPool(launch, laser);
+                    }
+                }
+                _laserCanFire = false;
+                StartCoroutine(LaserReloadTimer());
+                PlaySFX(2);
+                _ammoCount--;
+            }
+            if (!_tripleShotActive && !_spreadShotActive)//Normal Shot
             {
                 Vector3 launch = _laserOffset.position;
                 if (_laserPool.childCount < 1)
@@ -382,6 +458,13 @@ public class Player : MonoBehaviour
                 if (_lives < 3)
                     StartCoroutine(RepairDamage());
                 break;
+            case 5:
+                _spreadShotCooldownTimer += 5;
+                if (!_spreadShotActive)
+                    StartCoroutine(SpreadShotRoutine());
+
+                Reload();
+                break;
             default:
                 break;
         }
@@ -413,7 +496,36 @@ public class Player : MonoBehaviour
                 _tripleShotCooldownTimer = 0;
                 _tripleShotActive = false;
                 if (OnAmmoTypeChange != null)
-                    OnAmmoTypeChange(0);
+                {
+                    if (_spreadShotActive)
+                        OnAmmoTypeChange(2);
+                    else
+                        OnAmmoTypeChange(0);
+                }
+            }
+        }
+    }
+
+    IEnumerator SpreadShotRoutine()
+    {
+        if (OnAmmoTypeChange != null)
+            OnAmmoTypeChange(2);
+        _spreadShotActive = true;
+        while (_spreadShotActive)
+        {
+            yield return new WaitForEndOfFrame();
+            _spreadShotCooldownTimer -= Time.deltaTime;
+            if (_spreadShotCooldownTimer <= 0)
+            {
+                _spreadShotCooldownTimer = 0;
+                _spreadShotActive = false;
+                if (OnAmmoTypeChange != null)
+                {
+                    if (_tripleShotActive)
+                        OnAmmoTypeChange(1);
+                    else
+                        OnAmmoTypeChange(0);
+                }
             }
         }
     }
