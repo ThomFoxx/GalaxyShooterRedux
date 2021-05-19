@@ -17,6 +17,13 @@ public class UIManager : MonoBehaviour
     [Range(0f, 5f)]
     private float _gameOverFlickerSpeed;
     private Player _player;
+    [SerializeField]
+    private Sprite[] _ammoTypes;
+    [SerializeField]
+    private Image _ammoDisplay;
+    [SerializeField]
+    private TMP_Text _ammoCountDisplay;
+
 
 
     private void OnEnable()
@@ -25,6 +32,8 @@ public class UIManager : MonoBehaviour
         Enemy.OnEnemyDeath += EnemyDeath;
         Player.OnPlayerDamaged += PlayerDamaged;
         Player.OnPlayerDeath += PlayerDeath;
+        Player.OnAmmoTypeChange += FireType;
+        Player.OnReloadAmmo += Reload;
     }
 
     void Start()
@@ -43,6 +52,18 @@ public class UIManager : MonoBehaviour
     {
         yield return new WaitForEndOfFrame();
         _livesDispaly.sprite = _livesSprites[lives];
+    }
+
+    private IEnumerator UpdateAmmoCount(int current, int max)
+    {
+        yield return new WaitForEndOfFrame();
+        _ammoCountDisplay.text = current + " / " + max;
+    }
+
+    private IEnumerator UpdateAmmoType(int type)
+    {
+        yield return new WaitForEndOfFrame();
+        _ammoDisplay.sprite = _ammoTypes[type];
     }
 
     private IEnumerator DisplayGameOver()
@@ -91,10 +112,22 @@ public class UIManager : MonoBehaviour
         StartCoroutine(DisplayGameOver());
     }
 
+    private void Reload(int current, int max)
+    {
+        StartCoroutine(UpdateAmmoCount(current, max));
+    }
+
+    private void FireType(int type)
+    {
+        StartCoroutine(UpdateAmmoType(type));
+    }
+
     private void OnDisable()
     {
         Enemy.OnEnemyDeath -= EnemyDeath;
         Player.OnPlayerDamaged -= PlayerDamaged;
         Player.OnPlayerDeath -= PlayerDeath;
+        Player.OnAmmoTypeChange -= FireType;
+        Player.OnReloadAmmo -= Reload;
     }
 }

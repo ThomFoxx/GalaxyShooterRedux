@@ -20,11 +20,16 @@ public class Player : MonoBehaviour
     [SerializeField]
     private GameObject _laserPrefab;
     [SerializeField]
+    private GameObject _sparkPrefab;
+    [SerializeField]
     [Tooltip("Normal Shot Offset")]
     private Transform _laserOffset;
     [SerializeField]
     [Tooltip("Triple Shot Offset")]
     private Transform[] _tripleShotOffset;
+    [SerializeField]
+    [Tooltip("Normal Shot Offset")]
+    private Transform _sparkOffset;
     private Transform _laserPool;
     [SerializeField]
     private bool _tripleShotActive, _speedBoostActive, _shieldActive;
@@ -53,6 +58,13 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float _thrusterBoostAmount;
     private float _thrusterBoostMultiplier;
+    private int _ammoCount = 5;
+    [SerializeField]
+    private int _ammoClip;
+    [SerializeField]
+    private int _maxAmmo;
+
+
     [SerializeField]
     [Tooltip("For Debugging/Testing")]
     private float Speed;
@@ -62,6 +74,10 @@ public class Player : MonoBehaviour
     public static event PlayerDeath OnPlayerDeath;
     public delegate void PlayerDamaged(int LivesCount);
     public static event PlayerDamaged OnPlayerDamaged;
+    public delegate void ReloadAmmo(int Current, int Max);
+    public static event ReloadAmmo OnReloadAmmo;
+    public delegate void AmmoTypeChange(int Type);
+    public static event AmmoTypeChange OnAmmoTypeChange;
 
     private void OnEnable()
     {
@@ -82,6 +98,11 @@ public class Player : MonoBehaviour
         transform.position = Vector3.zero;
         _shieldRenderer = _shield.GetComponent<Renderer>();
         _shieldPowerImage.material.SetFloat("_visibility", _shieldPowerLevels[_shieldCount]);
+
+        if (OnReloadAmmo != null)
+            OnReloadAmmo(_ammoCount, _maxAmmo);
+        if (OnAmmoTypeChange != null)
+            OnAmmoTypeChange(0);
     }
 
     void Update()
@@ -133,10 +154,10 @@ public class Player : MonoBehaviour
                 transform.position = new Vector3(transform.position.x, 0, 0);
             else if (transform.position.z <= -10.75f)
                 transform.position = new Vector3(transform.position.x, 0, -10.75f);
-            if (transform.position.x >= 19.5f)
-                transform.position = new Vector3(19.5f, 0, transform.position.z);
-            else if (transform.position.x <= -19.5f)
-                transform.position = new Vector3(-19.5f, 0, transform.position.z);
+            if (transform.position.x >= 22f)
+                transform.position = new Vector3(22f, 0, transform.position.z);
+            else if (transform.position.x <= -22f)
+                transform.position = new Vector3(-22f, 0, transform.position.z);
 
             ThrusterMaintence(verticalInput);
             RollControl(horizontalInput);
@@ -196,7 +217,7 @@ public class Player : MonoBehaviour
 
     private void Weapon()
     {
-        if (Input.GetKey(KeyCode.Space) && _laserCanFire)
+        if (Input.GetKey(KeyCode.Space) && _laserCanFire && _ammoCount > 0)
         {
             if (_tripleShotActive) //Triple Shot
             {
@@ -213,6 +234,7 @@ public class Player : MonoBehaviour
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
                 PlaySFX(2);
+                _ammoCount--;
             }
             else //Normal Shot
             {
@@ -225,8 +247,18 @@ public class Player : MonoBehaviour
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
                 PlaySFX(2);
+                _ammoCount--;
             }
-
+            if (OnReloadAmmo != null)
+                OnReloadAmmo(_ammoCount, _maxAmmo);
+        }
+        else if (Input.GetKey(KeyCode.Space) && _laserCanFire)
+        {
+            Vector3 launch = _sparkOffset.position;
+            GameObject spark =Instantiate(_sparkPrefab, launch, transform.rotation, this.transform);
+            _laserCanFire = false;
+            StartCoroutine(LaserReloadTimer());
+            Destroy(spark.gameObject, .5f);
         }
     }
 
@@ -320,6 +352,8 @@ TryAgain:
                 _tripleShotCooldownTimer += 5;
                 if (!_tripleShotActive)
                     StartCoroutine(TripleShotRoutine());
+
+                Reload();
                 break;
             case 1:
                 _speedBoostCooldownTimer += 5;
@@ -330,13 +364,30 @@ TryAgain:
                 if (!_shieldActive)
                     StartCoroutine(ShieldPowerUpRoutine());
                 break;
+            case 3:
+                Reload();
+                break;
             default:
                 break;
         }
     }
 
+    private void Reload()
+    {
+        if (_ammoCount < _maxAmmo)
+        {
+            _ammoCount += _ammoClip;
+            if (_ammoCount > _maxAmmo)
+                _ammoCount = _maxAmmo;
+        }
+        if (OnReloadAmmo != null)
+            OnReloadAmmo(_ammoCount, _maxAmmo);
+    }
+
     IEnumerator TripleShotRoutine()
     {
+        if (OnAmmoTypeChange != null)
+            OnAmmoTypeChange(1);
         _tripleShotActive = true;
         while (_tripleShotActive)
         {
@@ -346,6 +397,8 @@ TryAgain:
             {
                 _tripleShotCooldownTimer = 0;
                 _tripleShotActive = false;
+                if (OnAmmoTypeChange != null)
+                    OnAmmoTypeChange(0);
             }
         }
     }
@@ -425,7 +478,7 @@ TryAgain:
         }
     }
 
-    
+
     private void OnDisable()
     {
         Enemy.OnEnemyDeath -= EnemyDeath;
