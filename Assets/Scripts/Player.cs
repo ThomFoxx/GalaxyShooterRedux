@@ -211,9 +211,9 @@ public class Player : MonoBehaviour
             yield return new WaitForEndOfFrame();
             _thrusterPower -= Time.deltaTime;
             _thrusterPowerImage.material.SetFloat("_visibility", _thrusterPower);
-            if (_thrusterPower < _thrusterPowerMax * .25f)
-                _canThrust = false;
         }
+        if (_thrusterPower < _thrusterPowerMax * .25f)
+            _canThrust = false;
         _thrusterActive = false;
         if (_thrusterPower < 0)
             _thrusterPower = 0;
@@ -221,15 +221,15 @@ public class Player : MonoBehaviour
 
     private IEnumerator ThrusterPowerUp()
     {
-        while (_thrusterPower < 5)
+        while (_thrusterPower < _thrusterPowerMax)
         {
             yield return new WaitForEndOfFrame();
             _thrusterPower += Time.deltaTime/2;
             _thrusterPowerImage.material.SetFloat("_visibility", _thrusterPower);
         }
         _canThrust = true;
-            if (_thrusterPower > 5)
-            _thrusterPower = 5;
+            if (_thrusterPower > _thrusterPowerMax)
+            _thrusterPower = _thrusterPowerMax;
     }
 
     private void EngineMaintence(float Input)
