@@ -26,16 +26,14 @@ public class Laser : MonoBehaviour
     void Update()
     {
         if (transform.gameObject.activeInHierarchy && transform.parent != _pool)
-            Movement();
+            if (_lastOwner != null)
+                Movement();
+            else
+                SendToPool();
     }
 
     private void Movement()
     {
-    /*    if (Vector3.Distance(Vector3.zero, transform.position) < 30)
-            transform.Translate(transform.TransformDirection(Vector3.forward) * _speed * Time.deltaTime, Space.World);
-        else
-            transform.parent = _pool;
-    */
         if (_lastOwner.CompareTag("Enemy"))
             transform.Translate(transform.TransformDirection(Vector3.forward) * _speed * _enemySpeedMultiplier * Time.deltaTime, Space.World);
         else
@@ -52,6 +50,7 @@ public class Laser : MonoBehaviour
         if (transform.parent == _pool)
         {
             transform.localPosition = Vector3.zero;
+            transform.localScale = Vector3.one;
             transform.gameObject.SetActive(false);
         }
         else if (transform.parent != null)

@@ -295,7 +295,7 @@ public class Player : MonoBehaviour
                 PlaySFX(2);
                 _ammoCount--;
             }
-            if (_spreadShotActive) //Triple Shot
+            if (_spreadShotActive) //Spread Shot
             {
                 foreach (Transform laser in _spreadShotOffset)
                 {
@@ -331,7 +331,7 @@ public class Player : MonoBehaviour
         else if (Input.GetKey(KeyCode.Space) && _laserCanFire)
         {
             Vector3 launch = _sparkOffset.position;
-            GameObject spark =Instantiate(_sparkPrefab, launch, transform.rotation, this.transform);
+            GameObject spark = Instantiate(_sparkPrefab, launch, transform.rotation, this.transform);
             _laserCanFire = false;
             StartCoroutine(LaserReloadTimer());
             Destroy(spark.gameObject, .5f);
@@ -344,6 +344,7 @@ public class Player : MonoBehaviour
         laserTemp.transform.parent = this.transform;
         laserTemp.transform.position = LaunchPOS;
         laserTemp.transform.rotation = Offset.rotation;
+        laserTemp.transform.localScale = Offset.localScale;
         laserTemp.GetComponent<Laser>().SetLastOwner(this.transform);
         laserTemp.SetActive(true);
     }
@@ -414,8 +415,6 @@ public class Player : MonoBehaviour
             }
         }
         _lives++;
-        if (OnPlayerDamaged != null)
-            OnPlayerDamaged(_lives);
     }
 
     private void PlaySFX(int SFXGroup)
