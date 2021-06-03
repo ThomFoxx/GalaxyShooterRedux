@@ -61,7 +61,7 @@ public class Player : MonoBehaviour
     [SerializeField]
     private float _thrusterBoostAmount;
     private float _thrusterBoostMultiplier;
-    private int _ammoCount = 5;
+    private int _ammoCount = 15;
     [SerializeField]
     private int _ammoClip;
     [SerializeField]
@@ -415,6 +415,7 @@ public class Player : MonoBehaviour
             }
         }
         _lives++;
+
     }
 
     private void PlaySFX(int SFXGroup)

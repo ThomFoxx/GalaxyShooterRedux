@@ -35,7 +35,10 @@ public class Asteroid : MonoBehaviour
             _collider.enabled = false;
             Destroy(this.gameObject, .6f);
             if (_isStarterAsteroid)
+            {
+                UIManager.Instance.UpdateWaveDisplay(1);
                 SpawnManager.Instance.StartSpawning();
+            }
         }
     }
 

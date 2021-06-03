@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     private bool _isGameOver = false;
+    [SerializeField]
+    private bool _isHorizontalFlight = false;
 
     private static GameManager _instance;
     public static GameManager Instance
@@ -35,6 +37,11 @@ public class GameManager : MonoBehaviour
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         if(Input.GetKeyDown(KeyCode.Escape))
             Application.Quit();
+    }
+
+    public bool IsHorizontalFlight()
+    {
+        return _isHorizontalFlight;
     }
 
     public void GameOver(bool flag)

@@ -25,11 +25,24 @@ public class Enemy : MonoBehaviour
     [SerializeField]
     private bool _laserCanFire = true;
     [SerializeField]
-    private Vector2 _laserCoolDown = new Vector2(3, 7);
+    private Vector2 _laserCoolDown = new Vector2(1,5);
+    [SerializeField]
+    [Tooltip("Percent over which a Base Enemy may be a Tracker")]
+    private int _trackerChance;
     private GameObject _target;
 
     public delegate void EnemyDeath(int pointValue);
     public static event EnemyDeath OnEnemyDeath;
+
+
+    private void Awake()
+    {
+        int RNG = Random.Range(0, 100);
+        if (RNG >= _trackerChance)
+            _target = GameObject.FindGameObjectWithTag("Player");
+        else
+            _target = null;
+    }
 
     private void OnEnable()
     {
@@ -44,15 +57,6 @@ public class Enemy : MonoBehaviour
             _container = GameObject.Find("Enemy_Container").transform;
         if (_laserPool == null)
             _laserPool = GameObject.Find("Laser_Pool").transform;
-    }
-
-    private void Awake()
-    {
-        int RNG = Random.Range(0, 10);
-        if (RNG >= 0)
-            _target = GameObject.FindGameObjectWithTag("Player");
-        else
-            _target = null;
     }
 
     // Update is called once per frame

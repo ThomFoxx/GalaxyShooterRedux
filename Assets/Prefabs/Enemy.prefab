@@ -68,6 +68,7 @@ MonoBehaviour:
   _laserPrefab: {fileID: 5854404259377316476, guid: 8c81dab4294e8924b8d06aa40dce5d0b, type: 3}
   _laserCanFire: 1
   _laserCoolDown: {x: 3, y: 7}
+  _trackerChance: 75
 --- !u!54 &-6235861749091576762
 Rigidbody:
   m_ObjectHideFlags: 0

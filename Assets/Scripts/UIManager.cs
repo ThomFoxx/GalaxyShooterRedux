@@ -23,8 +23,26 @@ public class UIManager : MonoBehaviour
     private Image _ammoDisplay;
     [SerializeField]
     private TMP_Text _ammoCountDisplay;
+    [SerializeField]
+    private TMP_Text _waveDisplayText;
 
 
+    private static UIManager _instance;
+    public static UIManager Instance
+    {
+        get
+        {
+            if (_instance == null)
+                Debug.LogError("UI Manager is Null!!!");
+
+            return _instance;
+        }
+    }
+
+    private void Awake()
+    {
+        _instance = this;
+    }
 
     private void OnEnable()
     {
@@ -40,7 +58,7 @@ public class UIManager : MonoBehaviour
     {
         _scoreText.text = "Score: " + 0;
         _gameOverText.gameObject.SetActive(false);
-    }    
+    }
 
     private IEnumerator UpdateScore()
     {
@@ -74,7 +92,7 @@ public class UIManager : MonoBehaviour
         _gameOverText.color = new Color32(255, 0, 0, 0);
         while (GameManager.Instance.IsGameOver())
         {
-           
+
             while (alpha < 255)
             {
                 yield return new WaitForEndOfFrame();
@@ -94,6 +112,13 @@ public class UIManager : MonoBehaviour
             _gameOverText.color = new Color32(255, 0, 0, 0);
             yield return new WaitForEndOfFrame();
         }
+    }
+
+    private IEnumerator DisplayWave()
+    {
+        _waveDisplayText.gameObject.SetActive(true);
+        yield return new WaitForSeconds(5);
+        _waveDisplayText.gameObject.SetActive(false);
     }
 
     private void EnemyDeath(int notUsed)
@@ -120,6 +145,12 @@ public class UIManager : MonoBehaviour
     private void FireType(int type)
     {
         StartCoroutine(UpdateAmmoType(type));
+    }
+
+    public void UpdateWaveDisplay(int Wave)
+    {
+        _waveDisplayText.text = "Wave " + Wave;
+        StartCoroutine(DisplayWave());
     }
 
     private void OnDisable()
