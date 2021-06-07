@@ -33,7 +33,6 @@ public class Player : MonoBehaviour
     [SerializeField]
     [Tooltip("Normal Shot Offset")]
     private Transform _sparkOffset;
-    private Transform _laserPool;
     [SerializeField]
     private bool _tripleShotActive, _speedBoostActive, _shieldActive, _spreadShotActive;
     [SerializeField]
@@ -95,17 +94,11 @@ public class Player : MonoBehaviour
     {
         _laserCoolDownTimer = new WaitForSeconds(_laserCoolDown);
         Enemy.OnEnemyDeath += EnemyDeath;
+        Teleporter.OnEnemyDeath += EnemyDeath;
     }
 
     void Start()
     {
-        if (_laserPool == null)
-            _laserPool = GameObject.Find("Laser_Pool").transform;
-        else
-        {
-            GameObject Pool = new GameObject("Laser_Pool");
-            _laserPool = Pool.transform;
-        }
 
         transform.position = Vector3.zero;
         _shieldRenderer = _shield.GetComponent<Renderer>();
@@ -281,14 +274,9 @@ public class Player : MonoBehaviour
             if (_tripleShotActive) //Triple Shot
             {
                 foreach (Transform laser in _tripleShotOffset)
-                {
-                    Vector3 launch = laser.position;
-                    if (_laserPool.childCount < 1)
-                        Instantiate(_laserPrefab, launch, laser.rotation, this.transform);
-                    else
-                    {
-                        PullLaserFromPool(launch, laser);
-                    }
+                {                    
+                    GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
+                    SetupPoolObject(GO, laser);
                 }
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
@@ -299,13 +287,8 @@ public class Player : MonoBehaviour
             {
                 foreach (Transform laser in _spreadShotOffset)
                 {
-                    Vector3 launch = laser.position;
-                    if (_laserPool.childCount < 1)
-                        Instantiate(_laserPrefab, launch, laser.rotation, this.transform);
-                    else
-                    {
-                        PullLaserFromPool(launch, laser);
-                    }
+                    GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
+                    SetupPoolObject(GO, laser);
                 }
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
@@ -314,11 +297,8 @@ public class Player : MonoBehaviour
             }
             if (!_tripleShotActive && !_spreadShotActive)//Normal Shot
             {
-                Vector3 launch = _laserOffset.position;
-                if (_laserPool.childCount < 1)
-                    Instantiate(_laserPrefab, launch, transform.rotation, this.transform);
-                else
-                    PullLaserFromPool(launch, _laserOffset);
+                GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
+                SetupPoolObject(GO, _laserOffset);
 
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
@@ -338,16 +318,15 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void PullLaserFromPool(Vector3 LaunchPOS, Transform Offset)
+    private void SetupPoolObject(GameObject Obj, Transform Offset)
     {
-        GameObject laserTemp = _laserPool.GetChild(0).gameObject;
-        laserTemp.transform.parent = this.transform;
-        laserTemp.transform.position = LaunchPOS;
-        laserTemp.transform.rotation = Offset.rotation;
-        laserTemp.transform.localScale = Offset.localScale;
-        laserTemp.GetComponent<Laser>().SetLastOwner(this.transform);
-        laserTemp.SetActive(true);
+        Obj.transform.position = Offset.position;
+        Obj.transform.rotation = Offset.rotation;
+        Obj.transform.localScale = Offset.localScale;
+        Obj.GetComponent<Laser>().SetLastOwner(this.transform);
+        Obj.SetActive(true);
     }
+
 
     IEnumerator LaserReloadTimer()
     {
@@ -415,7 +394,7 @@ public class Player : MonoBehaviour
             }
         }
         _lives++;
-
+        StartCoroutine(UIManager.Instance.UpdateLives(_lives));
     }
 
     private void PlaySFX(int SFXGroup)
@@ -608,5 +587,6 @@ public class Player : MonoBehaviour
     private void OnDisable()
     {
         Enemy.OnEnemyDeath -= EnemyDeath;
+        Teleporter.OnEnemyDeath -= EnemyDeath;
     }
 }

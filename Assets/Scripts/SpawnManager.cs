@@ -5,7 +5,9 @@ using UnityEngine;
 public class SpawnManager : MonoBehaviour
 {
     [SerializeField]
-    private GameObject _enemyPrefab, _explosionPrefab;
+    private GameObject[] _enemyPrefabs;
+    [SerializeField]
+    private GameObject _explosionPrefab;
     [SerializeField]
     private GameObject[] _powerupPrefabs;
     [SerializeField]
@@ -17,6 +19,7 @@ public class SpawnManager : MonoBehaviour
     [Tooltip("Number of Enemies in each Wave. 0 = Boss Wave")]
     private int[] _waveCounts;
     private int _spawnedEnemiesInWave;
+    private int _killedEnemiesInWave;
     private int _currentWave = 0;
 
     private bool _spawning = false;
@@ -41,7 +44,6 @@ public class SpawnManager : MonoBehaviour
     private void OnEnable()
     {
         Player.OnPlayerDeath += PlayerDeath;
-        Enemy.OnEnemyDeath += EnemyDeath;
     }
 
     void Start()
@@ -55,7 +57,6 @@ public class SpawnManager : MonoBehaviour
         {
             StartCoroutine(WaveStart());
             StartCoroutine(PowerUpSpawnRoutine());
-            //_spawning = true;
         }
     }
 
@@ -64,26 +65,25 @@ public class SpawnManager : MonoBehaviour
         _spawning = false;
     }
 
-    private void EnemyDeath(int notUsed)
-    {
-        if (_spawnedEnemiesInWave >= _waveCounts[_currentWave] && _enemyContainer.childCount == 0)
-            StartCoroutine(WaveStart());
-    }
-
     IEnumerator WaveStart()
     {
         if (_currentWave < _waveCounts.Length)
         {
             UIManager.Instance.UpdateWaveDisplay(_currentWave + 1);
             _spawnedEnemiesInWave = 0;
+            _killedEnemiesInWave = 0;
             _spawning = true;
             yield return new WaitForSeconds(5);
             StartCoroutine(EnemySpawnRoutine());
         }
-        //else
-            //Display Winner's Game Over
-
+        else
+        {
+            _spawning = false;
+            GameManager.Instance.GameOver(true);
+            StartCoroutine(UIManager.Instance.DisplayGameOver());
+        }
     }
+
     IEnumerator PowerUpSpawnRoutine()
     {
         yield return new WaitForSeconds(5f);
@@ -112,6 +112,15 @@ public class SpawnManager : MonoBehaviour
         Instantiate(_powerupPrefabs[RNGItem], LaunchPOS, Quaternion.identity);
     }
 
+    private GameObject EnemyToSpawn()
+    {
+        int RNG = Random.Range(0, 100);
+        if (RNG <= 25 * _currentWave)
+            return _enemyPrefabs[1];
+        else
+            return _enemyPrefabs[0];
+    }
+
     IEnumerator EnemySpawnRoutine()
     {
         while (_spawning)
@@ -129,39 +138,38 @@ public class SpawnManager : MonoBehaviour
                     float RNG = Random.Range(-3.75f, 5.5f);
                     launch = new Vector3(0, RNG, 15);
                 }
-                SpawnEnemy(launch);
+                SpawnEnemy(launch, EnemyToSpawn());
                 yield return new WaitForSeconds(5);
             }
-            if (_enemyContainer.childCount == 0)
+            yield return new WaitForEndOfFrame();
+            if (_currentWave < _waveCounts.Length && _killedEnemiesInWave == _waveCounts[_currentWave])
             {
                 _spawning = false;
-                yield return new WaitForEndOfFrame();
-
-                if (_currentWave <= _waveCounts.Length-1)
-                    _currentWave++;
-
+                _currentWave++;
                 StartCoroutine(WaveStart());
+                yield return new WaitForEndOfFrame();
             }
-            yield return new WaitForEndOfFrame();
         }
-
     }
 
-    private void SpawnEnemy(Vector3 LaunchPOS)
+    private void SpawnEnemy(Vector3 LaunchPOS, GameObject Prefab)
     {
-        if (_enemyPool.childCount < 1)
-        {
-            if(_enemyContainer.childCount < _enemyCountLimit)
-                Instantiate(_enemyPrefab, LaunchPOS, Quaternion.Euler(0, 180, 0), _enemyContainer);
-        }
-        else
-        {
-            GameObject Enemy = _enemyPool.GetChild(0).gameObject;
-            Enemy.transform.position = LaunchPOS;
-            Enemy.transform.parent = _enemyContainer;
-            Enemy.SetActive(true);
-        }
+       
+            GameObject Enemy = PoolManager.Instance.RequestFromPool(Prefab); ;
+
+            if (Enemy != null)
+            {
+                Enemy.transform.position = LaunchPOS;
+                Enemy.transform.rotation = Quaternion.Euler(new Vector3(0,180,0));
+                Enemy.transform.localScale = Prefab.transform.localScale;
+                Enemy.SetActive(true);
+            }
         _spawnedEnemiesInWave++;
+    }
+
+    public void CountEnemyDeath()
+    {
+        _killedEnemiesInWave++;
     }
 
     public void SpawnExplosion(Vector3 BoomPOS)
@@ -172,6 +180,5 @@ public class SpawnManager : MonoBehaviour
     private void OnDisable()
     {
         Player.OnPlayerDeath -= PlayerDeath;
-        Enemy.OnEnemyDeath -= EnemyDeath;
-    }
+    }    
 }

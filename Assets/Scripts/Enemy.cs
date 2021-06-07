@@ -14,10 +14,7 @@ public class Enemy : MonoBehaviour
     [SerializeField]
     private int _pointValue;
     private bool _respawning = true;
-    private Transform _pool;
-    private Transform _container;
     private bool _isExploding = false;
-    private Transform _laserPool;
     [SerializeField]
     private Transform _laserOffset;
     [SerializeField]
@@ -25,7 +22,7 @@ public class Enemy : MonoBehaviour
     [SerializeField]
     private bool _laserCanFire = true;
     [SerializeField]
-    private Vector2 _laserCoolDown = new Vector2(1,5);
+    private Vector2 _laserCoolDown = new Vector2(.5f,3);
     [SerializeField]
     [Tooltip("Percent over which a Base Enemy may be a Tracker")]
     private int _trackerChance;
@@ -47,16 +44,11 @@ public class Enemy : MonoBehaviour
     private void OnEnable()
     {
         Player.OnPlayerDeath += PlayerDeath;
+        StartCoroutine(LaserReloadTimer());
     }
 
     void Start()
     {
-        if (_pool == null)
-            _pool = GameObject.Find("Enemy_Pool").transform;
-        if (_container == null)
-            _container = GameObject.Find("Enemy_Container").transform;
-        if (_laserPool == null)
-            _laserPool = GameObject.Find("Laser_Pool").transform;
     }
 
     // Update is called once per frame
@@ -77,16 +69,8 @@ public class Enemy : MonoBehaviour
     {
         if (_laserCanFire)
         {
-            GameObject laser;
-            Vector3 launch = _laserOffset.position;
-            if (_laserPool.childCount < 1)
-            {
-                laser = Instantiate(_laserPrefab, launch, transform.rotation, transform);
-                laser.transform.localScale = _laserOffset.localScale;
-            }
-            else
-                PullLaserFromPool(launch, _laserOffset);
-
+            GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
+            SetupPoolObject(GO, _laserOffset);
 
             _laserCanFire = false;
             StartCoroutine(LaserReloadTimer());
@@ -94,15 +78,13 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private void PullLaserFromPool(Vector3 LaunchPOS, Transform Offset)
+    private void SetupPoolObject(GameObject Obj, Transform Offset)
     {
-        GameObject laserTemp = _laserPool.GetChild(0).gameObject;
-        laserTemp.transform.parent = this.transform;
-        laserTemp.transform.position = LaunchPOS;
-        laserTemp.transform.rotation = Offset.rotation;
-        laserTemp.transform.localScale = Offset.localScale;
-        laserTemp.GetComponent<Laser>().SetLastOwner(this.transform);
-        laserTemp.SetActive(true);
+        Obj.transform.position = Offset.position;
+        Obj.transform.rotation = Offset.rotation;
+        Obj.transform.localScale = Offset.localScale;
+        Obj.GetComponent<Laser>().SetLastOwner(this.transform);
+        Obj.SetActive(true);
     }
 
     IEnumerator LaserReloadTimer()
@@ -137,45 +119,54 @@ public class Enemy : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Laser"))
+        switch (other.tag)
         {
-            if (other.transform.parent.TryGetComponent(out Laser laser))
-            {
-                if (laser.ReportLastOwner().CompareTag("Player"))
+            case "Laser":
+                if (other.transform.parent.TryGetComponent(out Laser laser))
                 {
-                    laser.SendToPool();
+                    if (laser.ReportLastOwner().CompareTag("Player"))
+                    {
+                        laser.SendToPool();
 
-                    SpawnManager.Instance.SpawnExplosion(transform.position);
-                    PlaySFX(1);
-                    StartCoroutine(SendToPool());
-                    if (OnEnemyDeath != null)
-                        OnEnemyDeath(_pointValue);
+                        SpawnManager.Instance.SpawnExplosion(transform.position);
+                        PlaySFX(1);
+                        StartCoroutine(SendToPool());
+                        if (OnEnemyDeath != null)
+                            OnEnemyDeath(_pointValue);
+
+                        SpawnManager.Instance.CountEnemyDeath();
+                    }
                 }
-            }
-        }
-        else if (other.CompareTag("Player"))
-        {
-            if (other.TryGetComponent(out Player player))
-                player.Damage();
+                break;
+            case "Player":
+                if (other.TryGetComponent(out Player player))
+                    player.Damage();
 
-            SpawnManager.Instance.SpawnExplosion(transform.position);
-            PlaySFX(1);
-            StartCoroutine(SendToPool());
-            if (OnEnemyDeath != null)
-                OnEnemyDeath(_pointValue / 2);
-        }
-        else if (other.CompareTag("Enemy") && transform.position.z >= 15)
-        {
-            if (!_horizontalFlight)
-                if (_respawning)
-                    transform.position = new Vector3(Random.Range(-20f, 20f), 0, Random.Range(20f, 23f));
-                else
-                    StartCoroutine(SendToPool());
-            else if (_horizontalFlight)
-                if (_respawning)
-                    transform.position = new Vector3(0, Random.Range(-3.75f, 5.5f), Random.Range(15f, 18f));
-                else
-                    StartCoroutine(SendToPool());
+                SpawnManager.Instance.SpawnExplosion(transform.position);
+                PlaySFX(1);
+                StartCoroutine(SendToPool());
+                if (OnEnemyDeath != null)
+                    OnEnemyDeath(_pointValue / 2);
+
+                SpawnManager.Instance.CountEnemyDeath();
+                break;
+            case "Enemy":
+                if (transform.position.z > 14)
+                {
+                    if (!_horizontalFlight)
+                        if (_respawning)
+                            transform.position = new Vector3(Random.Range(-20f, 20f), 0, Random.Range(20f, 23f));
+                        else
+                            StartCoroutine(SendToPool());
+                    else if (_horizontalFlight)
+                        if (_respawning)
+                            transform.position = new Vector3(0, Random.Range(-3.75f, 5.5f), Random.Range(15f, 18f));
+                        else
+                            StartCoroutine(SendToPool());
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -194,15 +185,6 @@ public class Enemy : MonoBehaviour
         Player.OnPlayerDeath -= PlayerDeath;
     }
 
-    private void OnTransformParentChanged()
-    {
-        if (transform.parent == _pool)
-        {
-            transform.localPosition = Vector3.zero;
-            transform.gameObject.SetActive(false);
-        }
-    }
-
     public IEnumerator SendToPool()
     {
         _isExploding = true;
@@ -210,6 +192,9 @@ public class Enemy : MonoBehaviour
         yield return new WaitForSeconds(.33f);
         _isExploding = false;
         _collider.enabled = true;
-        transform.parent = _pool;
+        transform.localPosition = Vector3.zero;
+        transform.localScale = Vector3.one;
+        transform.gameObject.SetActive(false);
     }
+
 }

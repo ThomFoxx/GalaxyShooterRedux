@@ -8,24 +8,18 @@ public class Laser : MonoBehaviour
     private float _speed = 8.5f;
     [SerializeField]
     private float _enemySpeedMultiplier = 1.5f;
-    private Transform _pool;
-    private Transform _container;
     private Transform _lastOwner;
-
 
     void Start()
     {
-        if (_pool == null)
-            _pool = GameObject.Find("Laser_Pool").transform;
-        if (_container == null)
-            _container = GameObject.Find("Laser_Container").transform;
+
         if (_lastOwner == null)
-            SetLastOwner(transform.parent);        
+            SetLastOwner(PoolManager.Instance.transform);
     }
 
     void Update()
     {
-        if (transform.gameObject.activeInHierarchy && transform.parent != _pool)
+        if (transform.gameObject.activeInHierarchy)
             if (_lastOwner != null)
                 Movement();
             else
@@ -40,29 +34,15 @@ public class Laser : MonoBehaviour
             transform.Translate(transform.TransformDirection(Vector3.forward) * _speed * Time.deltaTime, Space.World);
 
         if (transform.position.z > 14 && _lastOwner.CompareTag("Player"))
-            transform.parent = _pool;
+            SendToPool();
         else if (transform.position.z < -14 && _lastOwner.CompareTag("Enemy"))
-            transform.parent = _pool;
+            SendToPool();
     }
 
-    private void OnTransformParentChanged()
-    {
-        if (transform.parent == _pool)
-        {
-            transform.localPosition = Vector3.zero;
-            transform.localScale = Vector3.one;
-            transform.gameObject.SetActive(false);
-        }
-        else if (transform.parent != null)
-        {
-            SetLastOwner(transform.parent);
-        }
-    }
 
-    public void SetLastOwner(Transform parent)
+    public void SetLastOwner(Transform owner)
     {
-        transform.parent = _container;
-        _lastOwner = parent;        
+        _lastOwner = owner;        
     }
 
     public Transform ReportLastOwner()
@@ -72,17 +52,21 @@ public class Laser : MonoBehaviour
 
     public void SendToPool()
     {
-        transform.parent = _pool;
+        transform.localPosition = Vector3.zero;
+        transform.localScale = Vector3.one;
+        transform.gameObject.SetActive(false);
+        SetLastOwner(PoolManager.Instance.transform);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!_lastOwner.CompareTag("Player") && other.CompareTag("Player"))
-        {
-            if (other.TryGetComponent(out Player player))
-                player.Damage();
+        if (!_lastOwner.CompareTag("GameController"))
+            if (!_lastOwner.CompareTag("Player") && other.CompareTag("Player"))
+            {
+                if (other.TryGetComponent(out Player player))
+                    player.Damage();
 
-            Destroy(this.gameObject);
-        }
+                SendToPool();
+            }
     }
 }

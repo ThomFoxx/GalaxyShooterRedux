@@ -48,6 +48,7 @@ public class UIManager : MonoBehaviour
     {
         _player = GameObject.Find("Player").GetComponent<Player>();
         Enemy.OnEnemyDeath += EnemyDeath;
+        Teleporter.OnEnemyDeath += EnemyDeath;
         Player.OnPlayerDamaged += PlayerDamaged;
         Player.OnPlayerDeath += PlayerDeath;
         Player.OnAmmoTypeChange += FireType;
@@ -66,7 +67,7 @@ public class UIManager : MonoBehaviour
         _scoreText.text = "Score: " + _player.GetScore();
     }
 
-    private IEnumerator UpdateLives(int lives)
+    public IEnumerator UpdateLives(int lives)
     {
         yield return new WaitForEndOfFrame();
         _livesDispaly.sprite = _livesSprites[lives];
@@ -84,7 +85,7 @@ public class UIManager : MonoBehaviour
         _ammoDisplay.sprite = _ammoTypes[type];
     }
 
-    private IEnumerator DisplayGameOver()
+    public IEnumerator DisplayGameOver()
     {
         yield return new WaitForEndOfFrame();
         _gameOverText.gameObject.SetActive(true);
@@ -156,6 +157,7 @@ public class UIManager : MonoBehaviour
     private void OnDisable()
     {
         Enemy.OnEnemyDeath -= EnemyDeath;
+        Teleporter.OnEnemyDeath -= EnemyDeath;
         Player.OnPlayerDamaged -= PlayerDamaged;
         Player.OnPlayerDeath -= PlayerDeath;
         Player.OnAmmoTypeChange -= FireType;

@@ -37,6 +37,6 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Floats:
     - _stepSize: 0.02
-    - _visibility: 5.0004716
+    - _visibility: 5.0030956
     m_Colors: []
   m_BuildTextureStacks: []
