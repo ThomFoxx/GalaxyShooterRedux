@@ -14,31 +14,83 @@ public class Teleporter : MonoBehaviour
     [SerializeField]
     private int _pointValue;
     private bool _respawning = true;
-    private bool _isExploding = false;
+    private bool _isExploding;
+    [SerializeField]
+    private GameObject _missilePrefab;
+    [SerializeField]
+    private Vector3 _missileScale;
+    private Missile _missile = new Missile();
+    [SerializeField]
+    private Transform _player;
 
 
-    public delegate void EnemyDeath(int pointValue);
+    public delegate void EnemyDeath(int pointValue, Transform self);
     public static event EnemyDeath OnEnemyDeath;
 
     private void OnEnable()
     {
         _isTeleporting = false;
         Player.OnPlayerDeath += PlayerDeath;
+        Missile.OnMissileDeath += MissileLoss;
         StartCoroutine(SingleRandomTeleport());
+
     }
 
-    // Start is called before the first frame update
     void Start()
     {
+        _player = GameObject.FindObjectOfType<Player>().transform;
     }
 
     private void Update()
     {
-        transform.Rotate(Vector3.up, (1*Time.deltaTime), Space.World);
+        transform.Rotate(Vector3.up, (1 * Time.deltaTime), Space.World);
+        if (transform.position.x < _xLimits.x)
+            SingleRandomTeleport();
+        if (transform.position.x > _xLimits.y)
+            SingleRandomTeleport();
+    }
+
+    public IEnumerator WeaponCheck()
+    {
+        while (_player != null && transform.gameObject.activeSelf)
+        {
+            Weapon();
+            float RNG = Random.Range(5, 10);
+            yield return new WaitForSeconds(RNG);
+        }
+    }
+
+    private void Weapon()
+    {
+        float RNG = Random.Range(-20, 20);
+        GameObject GO = PoolManager.Instance.RequestFromPool(_missilePrefab);
+        _missile = GO.GetComponent<Missile>();
+        _missile.transform.position = new Vector3(RNG, 0, 20);
+        _missile.transform.rotation = Quaternion.Euler(0, 180, 0);
+        _missile.transform.localScale = _missileScale;
+        _missile.SetLastOwner(this.transform);
+        _missile.transform.gameObject.SetActive(true);
+        _missile.SetTarget(_player);
+        Debug.Log("Firing " + _missile.name);
+        _missile = new Missile();
+    }
+
+    public void ReleaseMissile()
+    {
+        _missile = new Missile();
+    }
+
+    private void MissileLoss(Transform missile)
+    {
+        if (_missile != null && missile == _missile.transform)
+        {
+            Debug.Log("Received Termination");
+            _missile = new Missile();
+        }
     }
 
     private IEnumerator SingleRandomTeleport()
-    {        
+    {
         if (!_isTeleporting)
         {
             float RNDX = Random.Range(_xLimits.x, _xLimits.y);
@@ -47,6 +99,7 @@ public class Teleporter : MonoBehaviour
             yield return Teleport(new Vector3(RNDX, 0, RNDZ));
         }
         yield return new WaitForEndOfFrame();
+
     }
 
     private IEnumerator ContinualRandomTeleport()
@@ -59,7 +112,7 @@ public class Teleporter : MonoBehaviour
                 float RNDZ = Random.Range(_zLimits.x, _zLimits.y);
                 _isTeleporting = true;
                 yield return Teleport(new Vector3(RNDX, 0, RNDZ));
-            }   
+            }
             yield return new WaitForEndOfFrame();
         }
     }
@@ -67,6 +120,7 @@ public class Teleporter : MonoBehaviour
     private IEnumerator Teleport(Vector3 NewPOS)
     {
         _collider.enabled = false;
+
         while (_scale > 0)
         {
             _scale -= Time.deltaTime;
@@ -99,7 +153,7 @@ public class Teleporter : MonoBehaviour
         switch (other.tag)
         {
             case "Laser":
-                if (other.transform.parent.TryGetComponent(out Laser laser))
+                if (other.TryGetComponent(out Laser laser))
                 {
                     if (laser.ReportLastOwner().CompareTag("Player"))
                     {
@@ -109,10 +163,20 @@ public class Teleporter : MonoBehaviour
                         PlaySFX(1);
                         StartCoroutine(SendToPool());
                         if (OnEnemyDeath != null)
-                            OnEnemyDeath(_pointValue);
+                            OnEnemyDeath(_pointValue, this.transform);
 
                         SpawnManager.Instance.CountEnemyDeath();
                     }
+                }
+                else if (other.TryGetComponent(out Missile missile) && !missile.ReportLastOwner().TryGetComponent(out Teleporter teleport))
+                {
+                    SpawnManager.Instance.SpawnExplosion(transform.position);
+                    PlaySFX(1);
+                    StartCoroutine(SendToPool());
+                    if (OnEnemyDeath != null)
+                        OnEnemyDeath(_pointValue, this.transform);
+
+                    SpawnManager.Instance.CountEnemyDeath();
                 }
                 break;
             case "Player":
@@ -123,7 +187,7 @@ public class Teleporter : MonoBehaviour
                 PlaySFX(1);
                 StartCoroutine(SendToPool());
                 if (OnEnemyDeath != null)
-                    OnEnemyDeath(_pointValue / 2);
+                    OnEnemyDeath(_pointValue / 2, this.transform);
 
                 SpawnManager.Instance.CountEnemyDeath();
                 break;
@@ -148,17 +212,23 @@ public class Teleporter : MonoBehaviour
     private void OnDisable()
     {
         Player.OnPlayerDeath -= PlayerDeath;
+        Missile.OnMissileDeath += MissileLoss;
     }
 
     public IEnumerator SendToPool()
     {
         _isExploding = true;
         _collider.enabled = false;
+        _missile.ResetTarget();
+        ReleaseMissile();
+        StopCoroutine(WeaponCheck());
+
         yield return new WaitForSeconds(.33f);
+
         _isExploding = false;
         _collider.enabled = true;
         transform.localPosition = Vector3.zero;
         transform.localScale = Vector3.one;
-        transform.gameObject.SetActive(false);
+        transform.gameObject.SetActive(false);        
     }
 }

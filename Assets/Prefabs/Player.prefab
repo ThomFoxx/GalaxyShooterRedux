@@ -419,7 +419,7 @@ Transform:
   m_GameObject: {fileID: 619700981735956467}
   m_LocalRotation: {x: -0, y: -0.13052598, z: -0, w: 0.99144495}
   m_LocalPosition: {x: 0, y: -0.157, z: 1.945}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 3426401782534448880}
   m_RootOrder: 0
@@ -533,7 +533,7 @@ Transform:
   m_GameObject: {fileID: 3803269055307693609}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: -1.11, y: -0.088, z: 0.658}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 9062531098404849715}
   m_RootOrder: 1
@@ -593,7 +593,7 @@ Transform:
   m_GameObject: {fileID: 4347830041841908792}
   m_LocalRotation: {x: -0, y: 0.25881857, z: -0, w: 0.965926}
   m_LocalPosition: {x: 0, y: -0.157, z: 1.945}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 3426401782534448880}
   m_RootOrder: 3
@@ -623,7 +623,7 @@ Transform:
   m_GameObject: {fileID: 4667813599577174121}
   m_LocalRotation: {x: -0, y: -0.2588186, z: -0, w: 0.96592593}
   m_LocalPosition: {x: 0, y: -0.157, z: 1.945}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 3426401782534448880}
   m_RootOrder: 2
@@ -653,7 +653,7 @@ Transform:
   m_GameObject: {fileID: 5032530250056921356}
   m_LocalRotation: {x: -0, y: -0.000000014901161, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.157, z: 1.9450002}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 2202859123625353959}
   m_RootOrder: 0
@@ -771,6 +771,8 @@ MonoBehaviour:
   _speed: 8
   _speedPowerUpAmount: 1.5
   _laserPrefab: {fileID: 5854404259377316476, guid: 8c81dab4294e8924b8d06aa40dce5d0b, type: 3}
+  _missilePrefab: {fileID: 5854404259377316476, guid: a1ebf2eae8806c344b9fd7ea231b4ac3, type: 3}
+  _missileScale: {x: 0.75, y: 0.75, z: 0.75}
   _sparkPrefab: {fileID: 1047824417248462, guid: 86991083bf70246cab4905f681be4c36, type: 3}
   _laserOffset: {fileID: 4689043419112195990}
   _tripleShotOffset:
@@ -803,10 +805,15 @@ MonoBehaviour:
   - {fileID: 4685569229012387866}
   _laserCanFire: 1
   _laserCoolDown: 0.25
+  _missileCoolDown: 1
   _score: 0
   _thrusterBoostAmount: 1.5
   _ammoClip: 5
   _maxAmmo: 30
+  _thrusterPowerMax: 5
+  _thrusterPower: 0
+  _thrusterPowerImage: {fileID: 0}
+  _canThrust: 1
   Speed: 0
 --- !u!1 &6386762763176468613
 GameObject:
@@ -833,7 +840,7 @@ Transform:
   m_GameObject: {fileID: 6386762763176468613}
   m_LocalRotation: {x: -0, y: 0.13052595, z: -0, w: 0.99144495}
   m_LocalPosition: {x: 0, y: -0.157, z: 1.945}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 3426401782534448880}
   m_RootOrder: 1
@@ -959,7 +966,7 @@ Transform:
   m_GameObject: {fileID: 7589329378999345419}
   m_LocalRotation: {x: -0, y: -0.000000014901161, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: -0.157, z: 1.9450002}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 9062531098404849715}
   m_RootOrder: 0
@@ -989,7 +996,7 @@ Transform:
   m_GameObject: {fileID: 7885583036506787992}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 1.11, y: -0.088, z: 0.658}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_Children: []
   m_Father: {fileID: 9062531098404849715}
   m_RootOrder: 2

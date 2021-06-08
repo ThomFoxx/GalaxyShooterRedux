@@ -70,6 +70,7 @@ public class UIManager : MonoBehaviour
     public IEnumerator UpdateLives(int lives)
     {
         yield return new WaitForEndOfFrame();
+        if(lives < _livesSprites.Length && lives >=0)
         _livesDispaly.sprite = _livesSprites[lives];
     }
 
@@ -122,7 +123,7 @@ public class UIManager : MonoBehaviour
         _waveDisplayText.gameObject.SetActive(false);
     }
 
-    private void EnemyDeath(int notUsed)
+    private void EnemyDeath(int notUsed, Transform notUsed2)
     {
         StartCoroutine(UpdateScore());
     }

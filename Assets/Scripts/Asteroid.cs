@@ -27,7 +27,7 @@ public class Asteroid : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.transform.parent.TryGetComponent(out Laser laser))
+        if (other.TryGetComponent(out Laser laser))
         {
             laser.SendToPool();
             SpawnManager.Instance.SpawnExplosion(transform.position);

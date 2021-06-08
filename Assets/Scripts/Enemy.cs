@@ -28,8 +28,10 @@ public class Enemy : MonoBehaviour
     private int _trackerChance;
     private GameObject _target;
 
-    public delegate void EnemyDeath(int pointValue);
+    public delegate void EnemyDeath(int pointValue, Transform self);
     public static event EnemyDeath OnEnemyDeath;
+    public delegate void EnemyRespawn(Transform self);
+    public static event EnemyRespawn OnEnemyRespawn;
 
 
     private void Awake()
@@ -96,18 +98,20 @@ public class Enemy : MonoBehaviour
 
     private void Respawn()
     {
-        if (!_horizontalFlight && transform.position.z <= -17)
+        if (!GameManager.Instance.IsHorizontalFlight() && transform.position.z <= -17)
             if (_respawning)
             {
                 float RNG = Random.Range(-20f, 20f);
                 transform.position = new Vector3(RNG, 0, 20);
                 if (_target != null)
                     transform.LookAt(_target.transform.position);
+                if (OnEnemyRespawn != null)
+                    OnEnemyRespawn(this.transform);
             }
             else
                 StartCoroutine(SendToPool());
 
-        else if (_horizontalFlight && transform.position.z <= -15)
+        else if (GameManager.Instance.IsHorizontalFlight() && transform.position.z <= -15)
             if (_respawning)
             {
                 float RNG = Random.Range(-3.75f, 5.5f);
@@ -122,7 +126,7 @@ public class Enemy : MonoBehaviour
         switch (other.tag)
         {
             case "Laser":
-                if (other.transform.parent.TryGetComponent(out Laser laser))
+                if (other.TryGetComponent(out Laser laser))
                 {
                     if (laser.ReportLastOwner().CompareTag("Player"))
                     {
@@ -132,10 +136,23 @@ public class Enemy : MonoBehaviour
                         PlaySFX(1);
                         StartCoroutine(SendToPool());
                         if (OnEnemyDeath != null)
-                            OnEnemyDeath(_pointValue);
+                            OnEnemyDeath(_pointValue,this.transform);
 
                         SpawnManager.Instance.CountEnemyDeath();
                     }
+                }
+                else if (other.TryGetComponent(out Missile missile))
+                {
+                    Debug.Log("Sending Missile to Pool Due to Enemy Impact");
+                    missile.SendToPool();
+
+                    SpawnManager.Instance.SpawnExplosion(transform.position);
+                    PlaySFX(1);
+                    StartCoroutine(SendToPool());
+                    if (OnEnemyDeath != null)
+                        OnEnemyDeath(_pointValue,this.transform);
+
+                    SpawnManager.Instance.CountEnemyDeath();
                 }
                 break;
             case "Player":
@@ -146,7 +163,7 @@ public class Enemy : MonoBehaviour
                 PlaySFX(1);
                 StartCoroutine(SendToPool());
                 if (OnEnemyDeath != null)
-                    OnEnemyDeath(_pointValue / 2);
+                    OnEnemyDeath(_pointValue / 2,this.transform);
 
                 SpawnManager.Instance.CountEnemyDeath();
                 break;

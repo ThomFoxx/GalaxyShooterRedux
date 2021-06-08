@@ -155,14 +155,16 @@ public class SpawnManager : MonoBehaviour
     private void SpawnEnemy(Vector3 LaunchPOS, GameObject Prefab)
     {
        
-            GameObject Enemy = PoolManager.Instance.RequestFromPool(Prefab); ;
-
+            GameObject Enemy = PoolManager.Instance.RequestFromPool(Prefab);
             if (Enemy != null)
             {
                 Enemy.transform.position = LaunchPOS;
                 Enemy.transform.rotation = Quaternion.Euler(new Vector3(0,180,0));
                 Enemy.transform.localScale = Prefab.transform.localScale;
                 Enemy.SetActive(true);
+            if (Enemy.TryGetComponent(out Teleporter teleport))
+                StartCoroutine(teleport.WeaponCheck());
+                
             }
         _spawnedEnemiesInWave++;
     }

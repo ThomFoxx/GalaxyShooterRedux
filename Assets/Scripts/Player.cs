@@ -20,6 +20,10 @@ public class Player : MonoBehaviour
     [SerializeField]
     private GameObject _laserPrefab;
     [SerializeField]
+    private GameObject _missilePrefab;
+    [SerializeField]
+    private Vector3 _missileScale;
+    [SerializeField]
     private GameObject _sparkPrefab;
     [SerializeField]
     [Tooltip("Normal Shot Offset")]
@@ -51,6 +55,10 @@ public class Player : MonoBehaviour
     [Tooltip("'Active Cycle' GO to effect any change in PlayMode")]
     private float _laserCoolDown = .25f;
     private WaitForSeconds _laserCoolDownTimer;
+    [SerializeField]
+    [Tooltip("'Active Cycle' GO to effect any change in PlayMode")]
+    private float _missileCoolDown = 1;
+    private WaitForSeconds _missileCoolDownTimer;
     private float _tripleShotCooldownTimer = 0;
     private float _speedBoostCooldownTimer = 0;
     private float _spreadShotCooldownTimer = 0;
@@ -74,6 +82,8 @@ public class Player : MonoBehaviour
     [SerializeField]
     private bool _canThrust = true;
     private bool _thrusterActive = false;
+    private int _missileCount = 3;
+    private bool _missileReloaded = true;
 
 
     [SerializeField]
@@ -93,6 +103,7 @@ public class Player : MonoBehaviour
     private void OnEnable()
     {
         _laserCoolDownTimer = new WaitForSeconds(_laserCoolDown);
+        _missileCoolDownTimer = new WaitForSeconds(_missileCoolDown);
         Enemy.OnEnemyDeath += EnemyDeath;
         Teleporter.OnEnemyDeath += EnemyDeath;
     }
@@ -276,7 +287,7 @@ public class Player : MonoBehaviour
                 foreach (Transform laser in _tripleShotOffset)
                 {                    
                     GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
-                    SetupPoolObject(GO, laser);
+                    SetupPooledLaser(GO, laser);
                 }
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
@@ -288,7 +299,7 @@ public class Player : MonoBehaviour
                 foreach (Transform laser in _spreadShotOffset)
                 {
                     GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
-                    SetupPoolObject(GO, laser);
+                    SetupPooledLaser(GO, laser);
                 }
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
@@ -298,7 +309,7 @@ public class Player : MonoBehaviour
             if (!_tripleShotActive && !_spreadShotActive)//Normal Shot
             {
                 GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
-                SetupPoolObject(GO, _laserOffset);
+                SetupPooledLaser(GO, _laserOffset);
 
                 _laserCanFire = false;
                 StartCoroutine(LaserReloadTimer());
@@ -316,9 +327,21 @@ public class Player : MonoBehaviour
             StartCoroutine(LaserReloadTimer());
             Destroy(spark.gameObject, .5f);
         }
+        if (Input.GetKeyDown(KeyCode.LeftControl) && _missileReloaded && _missileCount > 0)
+        {
+            GameObject GO = PoolManager.Instance.RequestFromPool(_missilePrefab);
+            GO.transform.position = _laserOffset.position;
+            GO.transform.localScale = _missileScale;
+            GO.SetActive(true);
+            GO.GetComponent<Missile>().SetLastOwner(transform);
+            GO.GetComponent<Missile>().SetTarget(TargetForMissile());
+            _missileCount--;
+            StartCoroutine(MissileReloadTimer());
+        }
+
     }
 
-    private void SetupPoolObject(GameObject Obj, Transform Offset)
+    private void SetupPooledLaser(GameObject Obj, Transform Offset)
     {
         Obj.transform.position = Offset.position;
         Obj.transform.rotation = Offset.rotation;
@@ -327,10 +350,15 @@ public class Player : MonoBehaviour
         Obj.SetActive(true);
     }
 
-
     IEnumerator LaserReloadTimer()
     {
         yield return _laserCoolDownTimer;
+        _laserCanFire = true;
+    }
+
+    IEnumerator MissileReloadTimer()
+    {
+        yield return _missileCoolDownTimer;
         _laserCanFire = true;
     }
 
@@ -402,7 +430,7 @@ public class Player : MonoBehaviour
         AudioManager.Instance.PlaySFX(SFXGroup);
     }
 
-    private void EnemyDeath(int PointValue)
+    private void EnemyDeath(int PointValue, Transform notUsed)
     {
         _score += PointValue;
     }
@@ -582,6 +610,48 @@ public class Player : MonoBehaviour
             _shieldActive = false;
             _shield.SetActive(false);
         }
+    }
+
+    private Transform TargetForMissile()
+    {
+        Collider[] HitInfo = new Collider[10];
+        if (Physics.OverlapSphereNonAlloc(transform.position, 5, HitInfo) > 0)
+        {
+            Debug.Log("Targets Found");
+            foreach (Collider target in HitInfo)
+            {
+                if (target.transform.CompareTag("Enemy"))
+                {
+                    Debug.Log("Tracking " + target.transform.name);
+                    return target.transform;
+                }
+            }           
+        }
+        else if (Physics.OverlapSphereNonAlloc(transform.position, 15, HitInfo) > 0)
+        {
+            Debug.Log("Targets Found");
+            foreach (Collider target in HitInfo)
+            {
+                if (target.transform.CompareTag("Enemy"))
+                {
+                    Debug.Log("Tracking " + target.transform.name);
+                    return target.transform;
+                }
+            }
+        }
+        else if (Physics.OverlapSphereNonAlloc(transform.position, 25, HitInfo) > 0)
+        {
+            Debug.Log("Targets Found");
+            foreach (Collider target in HitInfo)
+            {
+                if (target.transform.CompareTag("Enemy"))
+                {
+                    Debug.Log("Tracking " + target.transform.name);
+                    return target.transform;
+                }
+            }
+        }
+        return null;
     }
 
     private void OnDisable()
