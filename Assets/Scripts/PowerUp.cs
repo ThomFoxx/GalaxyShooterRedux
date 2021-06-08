@@ -9,12 +9,29 @@ public class PowerUp : MonoBehaviour
     [SerializeField]
     [Tooltip("0 = Tripple Shot, 1 = Speed Boost, 2 = Shields")]
     private int _type;
+    private bool _magnetized = false;
+    private Transform _player;
+
+    private void OnEnable()
+    {
+        Player.OnMagnetPull += MagnetON;
+        Player.OnMagnetStop += MagnetOFF;
+        _player = GameObject.FindGameObjectWithTag("Player")?.transform;
+    }
 
     private void Update()
     {
-        transform.Translate(Vector3.back * _speed * Time.deltaTime);
+        if(_magnetized)
+        {
+            float step =_speed * 2 * Time.deltaTime;
+            transform.position = Vector3.MoveTowards(transform.position, _player.position, step);
+        }
+        else
+            transform.Translate(Vector3.back * _speed * Time.deltaTime);
+
         if (transform.position.z < -17)
             Destroy(gameObject);
+
     }
 
     private void OnTriggerEnter(Collider other)
@@ -25,5 +42,24 @@ public class PowerUp : MonoBehaviour
             AudioManager.Instance.PlaySFX(0, 0);
             Destroy(gameObject);
         }
+    }
+
+    private void MagnetON()
+    {
+        if (gameObject.activeSelf)
+            _magnetized = true;
+        else
+            _magnetized = false;
+    }
+
+    private void MagnetOFF()
+    {
+        _magnetized = false;
+    }
+
+    private void OnDisable()
+    {
+        Player.OnMagnetPull -= MagnetON;
+        Player.OnMagnetStop -= MagnetOFF;
     }
 }

@@ -580,7 +580,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 9ec6f97bdfe52d94bbcadc69c8903a06, type: 3}
   - {fileID: 21300000, guid: 42ed06145e66b3b449d71d77c14fdecb, type: 3}
   - {fileID: 21300000, guid: dc26b3fbedb04b843b2eaf99c6505c55, type: 3}
-  _livesDispaly: {fileID: 1566918776}
+  _livesDisplay: {fileID: 1566918776}
   _gameOverText: {fileID: 1886717530}
   _gameOverFlickerSpeed: 2.5
   _ammoTypes:
@@ -590,6 +590,11 @@ MonoBehaviour:
   _ammoDisplay: {fileID: 1153921355}
   _ammoCountDisplay: {fileID: 592288097}
   _waveDisplayText: {fileID: 324536632}
+  _missileSprites:
+  - {fileID: 21300000, guid: 5bab08f30402c2d42bc4b79dad0c4ebd, type: 3}
+  - {fileID: 21300000, guid: bd1d2e9b135241144834b5dc978d199f, type: 3}
+  - {fileID: 21300000, guid: 68844a5c97ebaee459c9fb28c242a44a, type: 3}
+  _missileDisplay: {fileID: 875771027}
 --- !u!4 &380720552
 Transform:
   m_ObjectHideFlags: 0
@@ -1040,6 +1045,81 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 785405525}
   m_CullTransparentMesh: 1
+--- !u!1 &875771025
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 875771026}
+  - component: {fileID: 875771028}
+  - component: {fileID: 875771027}
+  m_Layer: 5
+  m_Name: MissileDisplay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &875771026
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875771025}
+  m_LocalRotation: {x: -0, y: -0, z: -1, w: 0.0000028461216}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.52790636, y: 0.52790636, z: 0.52790636}
+  m_Children: []
+  m_Father: {fileID: 898909140}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -180}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -33.3, y: -118.7}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &875771027
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875771025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 68844a5c97ebaee459c9fb28c242a44a, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &875771028
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 875771025}
+  m_CullTransparentMesh: 1
 --- !u!1 &894256001
 GameObject:
   m_ObjectHideFlags: 0
@@ -1182,6 +1262,7 @@ RectTransform:
   - {fileID: 477094227}
   - {fileID: 2080657636}
   - {fileID: 324536631}
+  - {fileID: 875771026}
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1233,7 +1314,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1052619891}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -100, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 216544165}
@@ -1346,6 +1427,7 @@ MonoBehaviour:
   - {fileID: 8594433859886140783, guid: 532fca1c07947f644acd74fc13c01914, type: 3}
   - {fileID: 3019228397244552690, guid: 54b16dbabd8a7d040b7351a0bc816c2b, type: 3}
   - {fileID: 7981981002702521131, guid: 6cfec0e16af82c242900861e6b240c3c, type: 3}
+  - {fileID: 220856148542520044, guid: cf20e56e5a2d94a4ebe850bd9a7862d5, type: 3}
   _enemyPool: {fileID: 0}
   _enemyContainer: {fileID: 0}
   _enemyCountLimit: 75

@@ -82,13 +82,19 @@ public class Player : MonoBehaviour
     [SerializeField]
     private bool _canThrust = true;
     private bool _thrusterActive = false;
-    private int _missileCount = 3;
+    private int _missileCount = 0;
     private bool _missileReloaded = true;
+    private bool _canUseMagnet = false;
+    private float _magnetTimer;
+    [SerializeField]
+    private float _maxMagnetTimer = 5;
 
 
     [SerializeField]
     [Tooltip("For Debugging/Testing")]
     private float Speed;
+    [SerializeField]
+    Collider[] HitInfo = new Collider[10];
 
 
     public delegate void PlayerDeath();
@@ -99,6 +105,10 @@ public class Player : MonoBehaviour
     public static event ReloadAmmo OnReloadAmmo;
     public delegate void AmmoTypeChange(int Type);
     public static event AmmoTypeChange OnAmmoTypeChange;
+    public delegate void MagnetPull();
+    public static event MagnetPull OnMagnetPull;
+    public delegate void MagnetStop();
+    public static event MagnetStop OnMagnetStop;
 
     private void OnEnable()
     {
@@ -132,6 +142,8 @@ public class Player : MonoBehaviour
             Movement();
 
         Weapon();
+
+        PowerUpFunctions();
     }
 
     private void Movement()
@@ -183,6 +195,22 @@ public class Player : MonoBehaviour
         }
     }
 
+    private void PowerUpFunctions()
+    {
+        if (_canUseMagnet)
+        {
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                if (OnMagnetPull != null)
+                    OnMagnetPull();
+            }
+            else if (Input.GetKeyUp(KeyCode.C))
+            {
+                if (OnMagnetStop != null)
+                    OnMagnetStop();
+            }
+        }
+    }
     private void Thruster()
     {
         if (Input.GetKey(KeyCode.LeftShift) && _thrusterPower > 0 && _canThrust)
@@ -328,15 +356,19 @@ public class Player : MonoBehaviour
             Destroy(spark.gameObject, .5f);
         }
         if (Input.GetKeyDown(KeyCode.LeftControl) && _missileReloaded && _missileCount > 0)
-        {
+        { 
+            _missileCount--;
+            UIManager.Instance.MissileUpdate(_missileCount);
             GameObject GO = PoolManager.Instance.RequestFromPool(_missilePrefab);
+            GO.transform.forward = Vector3.forward;
             GO.transform.position = _laserOffset.position;
             GO.transform.localScale = _missileScale;
             GO.SetActive(true);
             GO.GetComponent<Missile>().SetLastOwner(transform);
             GO.GetComponent<Missile>().SetTarget(TargetForMissile());
-            _missileCount--;
+           
             StartCoroutine(MissileReloadTimer());
+            
         }
 
     }
@@ -471,6 +503,25 @@ public class Player : MonoBehaviour
                     StartCoroutine(SpreadShotRoutine());
 
                 Reload();
+                break;
+            case 6:
+                _missileCount = 3;
+                StartCoroutine(UIManager.Instance.UpdateMissiles(_missileCount));
+                break;
+            case 7:
+                if (_canUseMagnet)
+                {
+                    StopCoroutine(MagentTimerRoutine());
+                    _magnetTimer = _maxMagnetTimer;
+                    StartCoroutine(MagentTimerRoutine());
+                }
+                else
+                {
+                    _canUseMagnet = true;
+                    _magnetTimer = _maxMagnetTimer;
+                    StartCoroutine(MagentTimerRoutine());
+                }
+
                 break;
             default:
                 break;
@@ -612,46 +663,37 @@ public class Player : MonoBehaviour
         }
     }
 
+    IEnumerator MagentTimerRoutine()
+    {
+        UIManager.Instance.MagnetUpdate(Mathf.CeilToInt(_magnetTimer));
+        while(_magnetTimer > 0)
+        {
+           yield return new WaitForEndOfFrame();
+            _magnetTimer -= Time.deltaTime;
+            UIManager.Instance.MagnetUpdate(Mathf.CeilToInt(_magnetTimer));
+        }
+        _canUseMagnet = false;
+        UIManager.Instance.MagnetUpdate(0);
+        if (OnMagnetStop != null)
+            OnMagnetStop();
+    }
+
     private Transform TargetForMissile()
     {
-        Collider[] HitInfo = new Collider[10];
-        if (Physics.OverlapSphereNonAlloc(transform.position, 5, HitInfo) > 0)
+        GameObject[] targets;
+        GameObject closestTarget = null;
+        float dist, minDist = 100f;
+        targets = GameObject.FindGameObjectsWithTag("Enemy");
+        for (int x = 0; x < targets.Length; x++)
         {
-            Debug.Log("Targets Found");
-            foreach (Collider target in HitInfo)
+            dist = Vector3.Distance(transform.position, targets[x].transform.position);
+            if (dist < minDist)
             {
-                if (target.transform.CompareTag("Enemy"))
-                {
-                    Debug.Log("Tracking " + target.transform.name);
-                    return target.transform;
-                }
-            }           
-        }
-        else if (Physics.OverlapSphereNonAlloc(transform.position, 15, HitInfo) > 0)
-        {
-            Debug.Log("Targets Found");
-            foreach (Collider target in HitInfo)
-            {
-                if (target.transform.CompareTag("Enemy"))
-                {
-                    Debug.Log("Tracking " + target.transform.name);
-                    return target.transform;
-                }
+                minDist = dist;
+                closestTarget = targets[x];
             }
         }
-        else if (Physics.OverlapSphereNonAlloc(transform.position, 25, HitInfo) > 0)
-        {
-            Debug.Log("Targets Found");
-            foreach (Collider target in HitInfo)
-            {
-                if (target.transform.CompareTag("Enemy"))
-                {
-                    Debug.Log("Tracking " + target.transform.name);
-                    return target.transform;
-                }
-            }
-        }
-        return null;
+        return closestTarget.transform;
     }
 
     private void OnDisable()
