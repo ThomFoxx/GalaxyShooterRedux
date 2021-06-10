@@ -107,8 +107,7 @@ public class Player : MonoBehaviour
     public static event AmmoTypeChange OnAmmoTypeChange;
     public delegate void MagnetPull();
     public static event MagnetPull OnMagnetPull;
-    public delegate void MagnetStop();
-    public static event MagnetStop OnMagnetStop;
+    public static event MagnetPull OnMagnetStop;
 
     private void OnEnable()
     {
@@ -203,14 +202,19 @@ public class Player : MonoBehaviour
             {
                 if (OnMagnetPull != null)
                     OnMagnetPull();
+
+                StartCoroutine(MagentTimerRoutine());
             }
             else if (Input.GetKeyUp(KeyCode.C))
             {
                 if (OnMagnetStop != null)
                     OnMagnetStop();
+
+                StopCoroutine(MagentTimerRoutine());
             }
         }
     }
+
     private void Thruster()
     {
         if (Input.GetKey(KeyCode.LeftShift) && _thrusterPower > 0 && _canThrust)
@@ -511,15 +515,14 @@ public class Player : MonoBehaviour
             case 7:
                 if (_canUseMagnet)
                 {
-                    StopCoroutine(MagentTimerRoutine());
                     _magnetTimer = _maxMagnetTimer;
-                    StartCoroutine(MagentTimerRoutine());
+                    UIManager.Instance.MagnetUpdate(Mathf.CeilToInt(_magnetTimer));
                 }
                 else
                 {
                     _canUseMagnet = true;
                     _magnetTimer = _maxMagnetTimer;
-                    StartCoroutine(MagentTimerRoutine());
+                    UIManager.Instance.MagnetUpdate(Mathf.CeilToInt(_magnetTimer));
                 }
 
                 break;
@@ -666,16 +669,19 @@ public class Player : MonoBehaviour
     IEnumerator MagentTimerRoutine()
     {
         UIManager.Instance.MagnetUpdate(Mathf.CeilToInt(_magnetTimer));
-        while(_magnetTimer > 0)
+        while(Input.GetKey(KeyCode.C) && _magnetTimer > 0)
         {
            yield return new WaitForEndOfFrame();
             _magnetTimer -= Time.deltaTime;
             UIManager.Instance.MagnetUpdate(Mathf.CeilToInt(_magnetTimer));
         }
-        _canUseMagnet = false;
-        UIManager.Instance.MagnetUpdate(0);
-        if (OnMagnetStop != null)
-            OnMagnetStop();
+        if (_magnetTimer <= 0)
+        {
+            _canUseMagnet = false;
+            UIManager.Instance.MagnetUpdate(0);
+            if (OnMagnetStop != null)
+                OnMagnetStop();
+        }
     }
 
     private Transform TargetForMissile()

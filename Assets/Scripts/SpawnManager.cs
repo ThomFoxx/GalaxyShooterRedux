@@ -11,8 +11,6 @@ public class SpawnManager : MonoBehaviour
     [SerializeField]
     private GameObject[] _powerupPrefabs;
     [SerializeField]
-    private Transform _enemyPool, _enemyContainer;
-    [SerializeField]
     private int _enemyCountLimit;
 
     [SerializeField]
@@ -115,8 +113,10 @@ public class SpawnManager : MonoBehaviour
     private GameObject EnemyToSpawn()
     {
         int RNG = Random.Range(0, 100);
-        if (RNG <= 25 * _currentWave)
+        if (RNG <= 5 * _currentWave)
             return _enemyPrefabs[1];
+        else if (RNG <= 10 * _currentWave)
+            return _enemyPrefabs[2];
         else
             return _enemyPrefabs[0];
     }

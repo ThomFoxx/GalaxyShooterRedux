@@ -7,7 +7,7 @@ public class PowerUp : MonoBehaviour
     [SerializeField]
     private float _speed;
     [SerializeField]
-    [Tooltip("0 = Tripple Shot, 1 = Speed Boost, 2 = Shields")]
+    [Tooltip("See Spawn Manager Prefab Array")]
     private int _type;
     private bool _magnetized = false;
     private Transform _player;
