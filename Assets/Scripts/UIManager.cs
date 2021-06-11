@@ -57,6 +57,8 @@ public class UIManager : MonoBehaviour
         _player = GameObject.Find("Player").GetComponent<Player>();
         Enemy.OnEnemyDeath += EnemyDeath;
         Teleporter.OnEnemyDeath += EnemyDeath;
+        Aggressive_Enemy.OnEnemyDeath += EnemyDeath;
+        Mine.OnMineDestroy += EnemyDeath;
         Player.OnPlayerDamaged += PlayerDamaged;
         Player.OnPlayerDeath += PlayerDeath;
         Player.OnAmmoTypeChange += FireType;
@@ -203,6 +205,8 @@ public class UIManager : MonoBehaviour
     {
         Enemy.OnEnemyDeath -= EnemyDeath;
         Teleporter.OnEnemyDeath -= EnemyDeath;
+        Aggressive_Enemy.OnEnemyDeath -= EnemyDeath;
+        Mine.OnMineDestroy -= EnemyDeath;
         Player.OnPlayerDamaged -= PlayerDamaged;
         Player.OnPlayerDeath -= PlayerDeath;
         Player.OnAmmoTypeChange -= FireType;

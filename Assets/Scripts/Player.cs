@@ -115,6 +115,8 @@ public class Player : MonoBehaviour
         _missileCoolDownTimer = new WaitForSeconds(_missileCoolDown);
         Enemy.OnEnemyDeath += EnemyDeath;
         Teleporter.OnEnemyDeath += EnemyDeath;
+        Aggressive_Enemy.OnEnemyDeath += EnemyDeath;
+        Mine.OnMineDestroy += EnemyDeath;
     }
 
     void Start()
@@ -468,6 +470,7 @@ public class Player : MonoBehaviour
 
     private void EnemyDeath(int PointValue, Transform notUsed)
     {
+        Debug.Log("Enemy Destroyed");
         _score += PointValue;
     }
 
@@ -706,5 +709,7 @@ public class Player : MonoBehaviour
     {
         Enemy.OnEnemyDeath -= EnemyDeath;
         Teleporter.OnEnemyDeath -= EnemyDeath;
+        Aggressive_Enemy.OnEnemyDeath -= EnemyDeath;
+        Mine.OnMineDestroy -= EnemyDeath;
     }
 }

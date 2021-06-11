@@ -49,11 +49,6 @@ public class Enemy : MonoBehaviour
         StartCoroutine(LaserReloadTimer());
     }
 
-    void Start()
-    {
-    }
-
-    // Update is called once per frame
     void Update()
     {
         Movement();

@@ -138,6 +138,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Asteroid
       objectReference: {fileID: 0}
+    - target: {fileID: 7354648968511132433, guid: e39800b4c1d60894f817185f7336d916, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7354648968511132526, guid: e39800b4c1d60894f817185f7336d916, type: 3}
       propertyPath: m_RootOrder
       value: 9
@@ -1006,7 +1010,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 190, y: -31.899994}
+  m_AnchoredPosition: {x: 190, y: -31.899963}
   m_SizeDelta: {x: 100, y: 61.520905}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &785405527
@@ -1307,6 +1311,8 @@ MonoBehaviour:
   - {fileID: 971671729424399130, guid: e890fdc0c790d16438a58b374f961d64, type: 3}
   - {fileID: 3515613890052792586, guid: 2175d63d7d88d93498f06debc8b09df5, type: 3}
   - {fileID: 971671729424399130, guid: 872c2d9382a50554d95425f27f4a866d, type: 3}
+  - {fileID: 971671729424399130, guid: 9e614438b56ccb54299b0c3b1e62a433, type: 3}
+  - {fileID: 8285806906523856115, guid: 7289e319746ccae4aa6feb8d7903175b, type: 3}
   - {fileID: 5854404259377316476, guid: 8c81dab4294e8924b8d06aa40dce5d0b, type: 3}
   - {fileID: 5854404259377316476, guid: a1ebf2eae8806c344b9fd7ea231b4ac3, type: 3}
   _pool: {fileID: 216544164}
@@ -1424,6 +1430,7 @@ MonoBehaviour:
   - {fileID: 971671729424399130, guid: e890fdc0c790d16438a58b374f961d64, type: 3}
   - {fileID: 3515613890052792586, guid: 2175d63d7d88d93498f06debc8b09df5, type: 3}
   - {fileID: 971671729424399130, guid: 872c2d9382a50554d95425f27f4a866d, type: 3}
+  - {fileID: 971671729424399130, guid: 9e614438b56ccb54299b0c3b1e62a433, type: 3}
   _explosionPrefab: {fileID: 2469343265430690884, guid: 2dda263f6882f8c46a6adb95d59f8318, type: 3}
   _powerupPrefabs:
   - {fileID: 220856148542520044, guid: 94fe2c55e43acb247aa954e0f8e1666e, type: 3}

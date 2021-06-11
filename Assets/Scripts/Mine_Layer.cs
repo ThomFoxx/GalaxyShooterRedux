@@ -2,12 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Aggressive_Enemy : MonoBehaviour
+public class Mine_Layer : MonoBehaviour
 {
     [SerializeField]
     private bool _horizontalFlight;
     [SerializeField]
-    private float _shipSpeed;
     private float _speed;
     [SerializeField]
     private Collider _collider;
@@ -20,11 +19,18 @@ public class Aggressive_Enemy : MonoBehaviour
     [SerializeField]
     private GameObject _laserPrefab;
     [SerializeField]
+    private Transform[] _mineOffeset;
+    [SerializeField]
+    private GameObject _minePrefab;
+    [SerializeField]
     private bool _laserCanFire = true;
     [SerializeField]
     private Vector2 _laserCoolDown = new Vector2(.5f, 3);
-    [SerializeField]
     private GameObject _target;
+    [SerializeField]
+    private int _maxMineCount = 3;
+    private int _mineCount;
+    private bool _mineReady = true;
 
     public delegate void EnemyDeath(int pointValue, Transform self);
     public static event EnemyDeath OnEnemyDeath;
@@ -33,16 +39,14 @@ public class Aggressive_Enemy : MonoBehaviour
 
 
     private void Awake()
-    {
-        _target = GameObject.FindGameObjectWithTag("Player");
+    {            
+        _target = GameObject.FindGameObjectWithTag("Player");        
     }
 
     private void OnEnable()
     {
         Player.OnPlayerDeath += PlayerDeath;
-        StartCoroutine(LaserReloadTimer());
-        StartCoroutine(AttackPattern());
-        _speed = _shipSpeed;
+        //StartCoroutine(LaserReloadTimer());
     }
 
     void Update()
@@ -55,12 +59,7 @@ public class Aggressive_Enemy : MonoBehaviour
     private void Movement()
     {
         if (!_isExploding)
-        {
-            if(_target != null)
-                transform.LookAt(_target.transform);
-
             transform.Translate(Vector3.forward * _speed * Time.deltaTime, Space.Self);
-        }
     }
 
     private void Weapon()
@@ -74,6 +73,47 @@ public class Aggressive_Enemy : MonoBehaviour
             StartCoroutine(LaserReloadTimer());
             PlaySFX(2);
         }
+        if (_target != null)
+            if (_mineCount > 0 && MiningPosition() && _mineReady)
+            {
+                StartCoroutine(ReleaseMines());
+            }
+    }
+
+    private bool MiningPosition()
+    {
+        if (transform.position.z < _target.transform.position.z)
+            return true;
+
+        return false;
+    }
+
+    private void ReloadMines()
+    {
+        _mineCount = Random.Range(1, _maxMineCount + 1);
+    }
+
+    IEnumerator ReleaseMines()
+    {
+        _mineReady = false;
+        float RNG = Random.Range(0.25f, 2);
+        yield return new WaitForSeconds(RNG/_mineCount);
+
+        while (_mineCount > 0)
+        {
+            for (int i = 0; i < _mineCount; i++)
+            {
+                yield return new WaitForSeconds(.01f);
+                for (int x = 0; x < 2; x++)
+                {
+                    GameObject Mine = PoolManager.Instance.RequestFromPool(_minePrefab);
+                    SetupPoolObject(Mine, _mineOffeset[x]);
+                    StartCoroutine(Mine.GetComponent<Mine>().Slowdown(_mineCount));
+                }
+                _mineCount--;
+            }
+        }
+        _mineReady = true;
     }
 
     private void SetupPoolObject(GameObject Obj, Transform Offset)
@@ -81,21 +121,7 @@ public class Aggressive_Enemy : MonoBehaviour
         Obj.transform.position = Offset.position;
         Obj.transform.rotation = Offset.rotation;
         Obj.transform.localScale = Offset.localScale;
-        Obj.GetComponent<Laser>().SetLastOwner(this.transform);
         Obj.SetActive(true);
-    }
-
-    IEnumerator AttackPattern()
-    {
-        while(transform.gameObject.activeSelf)
-        {
-            yield return new WaitForSeconds(3f);
-            float tempSpeed = _speed;
-            _speed = 0;
-            yield return new WaitForSeconds(5f);
-            _speed = tempSpeed;
-        }
-        yield return new WaitForEndOfFrame();
     }
 
     IEnumerator LaserReloadTimer()
@@ -112,8 +138,7 @@ public class Aggressive_Enemy : MonoBehaviour
             {
                 float RNG = Random.Range(-20f, 20f);
                 transform.position = new Vector3(RNG, 0, 20);
-                if (_target != null)
-                    transform.LookAt(_target.transform.position);
+                ReloadMines();
                 if (OnEnemyRespawn != null)
                     OnEnemyRespawn(this.transform);
             }
@@ -125,6 +150,7 @@ public class Aggressive_Enemy : MonoBehaviour
             {
                 float RNG = Random.Range(-3.75f, 5.5f);
                 transform.position = new Vector3(0, RNG, 15);
+                ReloadMines();
             }
             else
                 StartCoroutine(SendToPool());
@@ -172,7 +198,7 @@ public class Aggressive_Enemy : MonoBehaviour
                 PlaySFX(1);
                 StartCoroutine(SendToPool());
                 if (OnEnemyDeath != null)
-                    OnEnemyDeath(0, this.transform);
+                    OnEnemyDeath(_pointValue / 2, this.transform);
 
                 SpawnManager.Instance.CountEnemyDeath();
                 break;
@@ -209,7 +235,6 @@ public class Aggressive_Enemy : MonoBehaviour
     private void OnDisable()
     {
         Player.OnPlayerDeath -= PlayerDeath;
-        StopCoroutine(AttackPattern());
     }
 
     public IEnumerator SendToPool()

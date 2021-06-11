@@ -117,6 +117,8 @@ public class SpawnManager : MonoBehaviour
             return _enemyPrefabs[1];
         else if (RNG <= 10 * _currentWave)
             return _enemyPrefabs[2];
+        else if (RNG <= 15 * _currentWave)
+            return _enemyPrefabs[3];
         else
             return _enemyPrefabs[0];
     }
@@ -131,7 +133,7 @@ public class SpawnManager : MonoBehaviour
                 if (!GameManager.Instance.IsHorizontalFlight())
                 {
                     float RNG = Random.Range(-20f, 20f);
-                    launch = new Vector3(RNG, 0, 20);
+                    launch = new Vector3(RNG, 0, -20);
                 }
                 else
                 {
