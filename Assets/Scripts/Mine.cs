@@ -8,21 +8,16 @@ public class Mine : MonoBehaviour
     private Collider _collider;
     [SerializeField]
     private Collider _detectionCollider;
-    private bool _isExploding;
     [SerializeField]
     private int _pointValue = 10;
+    private bool _isExploding;
     [SerializeField]
     private float _speed;
-    private float _drag;
     
 
 
     public delegate void MineDestroy(int pointValue, Transform self);
     public static event MineDestroy OnMineDestroy;
-
-    private void Start()
-    {
-    }
 
     private void Update()
     {
@@ -43,19 +38,9 @@ public class Mine : MonoBehaviour
             yield return new WaitForSeconds(1f);
 
         }
-        /*while (TravelTime > 0)
-        {
-            yield return new WaitForSeconds(1);
-            TravelTime--;
-        }*/
         _speed = 0;
     }
-    
-    public void AddVelocity(Vector3 Velcoity)
-    {
-        GetComponent<Rigidbody>().velocity = Velcoity;
-    }
-
+        
     private void PlaySFX(int SFXGroup)
     {
         AudioManager.Instance.PlaySFX(SFXGroup);

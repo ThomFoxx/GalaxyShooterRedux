@@ -25,6 +25,13 @@ public class Aggressive_Enemy : MonoBehaviour
     private Vector2 _laserCoolDown = new Vector2(.5f, 3);
     [SerializeField]
     private GameObject _target;
+    [SerializeField]
+    private int _shieldChance;
+    [SerializeField]
+    private bool _shieldActive;
+    [SerializeField]
+    private GameObject _shield;
+    private Renderer _shieldRenderer;
 
     public delegate void EnemyDeath(int pointValue, Transform self);
     public static event EnemyDeath OnEnemyDeath;
@@ -34,6 +41,7 @@ public class Aggressive_Enemy : MonoBehaviour
 
     private void Awake()
     {
+        _shieldRenderer = _shield.GetComponent<Renderer>();
         _target = GameObject.FindGameObjectWithTag("Player");
     }
 
@@ -56,7 +64,7 @@ public class Aggressive_Enemy : MonoBehaviour
     {
         if (!_isExploding)
         {
-            if(_target != null)
+            if (_target != null)
                 transform.LookAt(_target.transform);
 
             transform.Translate(Vector3.forward * _speed * Time.deltaTime, Space.Self);
@@ -87,7 +95,7 @@ public class Aggressive_Enemy : MonoBehaviour
 
     IEnumerator AttackPattern()
     {
-        while(transform.gameObject.activeSelf)
+        while (transform.gameObject.activeSelf)
         {
             yield return new WaitForSeconds(3f);
             float tempSpeed = _speed;
@@ -112,6 +120,19 @@ public class Aggressive_Enemy : MonoBehaviour
             {
                 float RNG = Random.Range(-20f, 20f);
                 transform.position = new Vector3(RNG, 0, 20);
+
+                float RNGShield = Random.Range(0, 100);
+                if (RNGShield <= _shieldChance * SpawnManager.Instance.ReportCurrentWave())
+                {
+                    _shieldActive = true;
+                    ShieldPowerON();
+                }
+                else
+                {
+                    _shieldActive = false;
+                    ShieldPowerOFF();
+                }
+
                 if (_target != null)
                     transform.LookAt(_target.transform.position);
                 if (OnEnemyRespawn != null)
@@ -139,7 +160,32 @@ public class Aggressive_Enemy : MonoBehaviour
                 {
                     if (laser.ReportLastOwner().CompareTag("Player"))
                     {
-                        laser.SendToPool();
+                        if (!_shieldActive)
+                        {
+                            laser.SendToPool();
+
+                            SpawnManager.Instance.SpawnExplosion(transform.position);
+                            PlaySFX(1);
+                            StartCoroutine(SendToPool());
+                            if (OnEnemyDeath != null)
+                                OnEnemyDeath(_pointValue, this.transform);
+
+                            SpawnManager.Instance.CountEnemyDeath();
+                        }
+                        else
+                        {
+                            _shieldActive = false;
+                            StartCoroutine(ShieldPowerDownRoutine());
+                            laser.SendToPool();
+                        }
+                    }
+                }
+                else if (other.TryGetComponent(out Missile missile))
+                {
+                    if (!_shieldActive)
+                    {
+                        Debug.Log("Sending Missile to Pool Due to Enemy Impact");
+                        missile.SendToPool();
 
                         SpawnManager.Instance.SpawnExplosion(transform.position);
                         PlaySFX(1);
@@ -149,32 +195,36 @@ public class Aggressive_Enemy : MonoBehaviour
 
                         SpawnManager.Instance.CountEnemyDeath();
                     }
-                }
-                else if (other.TryGetComponent(out Missile missile))
-                {
-                    Debug.Log("Sending Missile to Pool Due to Enemy Impact");
-                    missile.SendToPool();
-
-                    SpawnManager.Instance.SpawnExplosion(transform.position);
-                    PlaySFX(1);
-                    StartCoroutine(SendToPool());
-                    if (OnEnemyDeath != null)
-                        OnEnemyDeath(_pointValue, this.transform);
-
-                    SpawnManager.Instance.CountEnemyDeath();
+                    else
+                    {
+                        _shieldActive = false;
+                        StartCoroutine(ShieldPowerDownRoutine());
+                        missile.SendToPool();
+                    }
                 }
                 break;
             case "Player":
                 if (other.TryGetComponent(out Player player))
+                {
                     player.Damage();
 
-                SpawnManager.Instance.SpawnExplosion(transform.position);
-                PlaySFX(1);
-                StartCoroutine(SendToPool());
-                if (OnEnemyDeath != null)
-                    OnEnemyDeath(0, this.transform);
 
-                SpawnManager.Instance.CountEnemyDeath();
+                    if (!_shieldActive)
+                    {
+                        SpawnManager.Instance.SpawnExplosion(transform.position);
+                        PlaySFX(1);
+                        StartCoroutine(SendToPool());
+                        if (OnEnemyDeath != null)
+                            OnEnemyDeath(0, this.transform);
+
+                        SpawnManager.Instance.CountEnemyDeath();
+                    }
+                    else
+                    {
+                        _shieldActive = false;
+                        StartCoroutine(ShieldPowerDownRoutine());
+                    }
+                }
                 break;
             case "Enemy":
                 if (transform.position.z > 14)
@@ -199,6 +249,40 @@ public class Aggressive_Enemy : MonoBehaviour
     private void PlaySFX(int SFXGroup)
     {
         AudioManager.Instance.PlaySFX(SFXGroup);
+    }
+
+    private void ShieldPowerON()
+    {
+        _shield.SetActive(true);
+        _shieldRenderer.material.SetFloat("_power", 1f);
+    }
+
+    private void ShieldPowerOFF()
+    {
+        _shield.SetActive(false);
+        _shieldRenderer.material.SetFloat("_power", 0);
+    }
+
+    IEnumerator ShieldPowerDownRoutine()
+    {
+        _collider.enabled = false;
+        float power = 2f;
+        _shieldRenderer.material.SetFloat("_power", power);
+        if (!_shieldActive)
+        {
+            yield return new WaitForSeconds(.33f);
+            while (power > -3f)
+            {
+                yield return new WaitForEndOfFrame();
+                power -= Time.deltaTime * 20;
+                _shieldRenderer.material.SetFloat("_power", power);
+            }
+            power = 0f;
+            _shieldRenderer.material.SetFloat("_power", power);
+            _shieldActive = false;
+            _shield.SetActive(false);
+        }
+        _collider.enabled = true;
     }
 
     private void PlayerDeath()

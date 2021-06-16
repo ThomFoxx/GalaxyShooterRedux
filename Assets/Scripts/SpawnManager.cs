@@ -49,6 +49,11 @@ public class SpawnManager : MonoBehaviour
         
     }
 
+    public int ReportCurrentWave()
+    {
+        return _currentWave;
+    }
+
     public void StartSpawning()
     {
         if (!_spawning)
@@ -164,9 +169,6 @@ public class SpawnManager : MonoBehaviour
                 Enemy.transform.rotation = Quaternion.Euler(new Vector3(0,180,0));
                 Enemy.transform.localScale = Prefab.transform.localScale;
                 Enemy.SetActive(true);
-            if (Enemy.TryGetComponent(out Teleporter teleport))
-                StartCoroutine(teleport.WeaponCheck());
-                
             }
         _spawnedEnemiesInWave++;
     }

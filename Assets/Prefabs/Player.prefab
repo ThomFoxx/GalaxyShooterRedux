@@ -156,7 +156,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1248964910
 Transform:
   m_ObjectHideFlags: 0
@@ -814,7 +814,19 @@ MonoBehaviour:
   _thrusterPower: 0
   _thrusterPowerImage: {fileID: 0}
   _canThrust: 1
+  _maxMagnetTimer: 5
   Speed: 0
+  HitInfo:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!1 &6386762763176468613
 GameObject:
   m_ObjectHideFlags: 0

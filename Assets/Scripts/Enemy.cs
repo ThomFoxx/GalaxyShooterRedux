@@ -27,6 +27,14 @@ public class Enemy : MonoBehaviour
     [Tooltip("Percent over which a Base Enemy may be a Tracker")]
     private int _trackerChance;
     private GameObject _target;
+    [SerializeField]
+    private int _shieldChance;
+    [SerializeField]
+    private bool _shieldActive;
+    [SerializeField]
+    private GameObject _shield;
+    private Renderer _shieldRenderer;
+
 
     public delegate void EnemyDeath(int pointValue, Transform self);
     public static event EnemyDeath OnEnemyDeath;
@@ -36,6 +44,7 @@ public class Enemy : MonoBehaviour
 
     private void Awake()
     {
+        _shieldRenderer = _shield.GetComponent<Renderer>();
         int RNG = Random.Range(0, 100);
         if (RNG >= _trackerChance)
             _target = GameObject.FindGameObjectWithTag("Player");
@@ -98,6 +107,19 @@ public class Enemy : MonoBehaviour
             {
                 float RNG = Random.Range(-20f, 20f);
                 transform.position = new Vector3(RNG, 0, 20);
+
+                float RNGShield = Random.Range(0, 100);
+                if (RNGShield <= _shieldChance * SpawnManager.Instance.ReportCurrentWave())
+                {
+                    _shieldActive = true;
+                    ShieldPowerON();
+                }
+                else
+                {
+                    _shieldActive = false;
+                    ShieldPowerOFF();
+                }
+                    
                 if (_target != null)
                     transform.LookAt(_target.transform.position);
                 if (OnEnemyRespawn != null)
@@ -121,46 +143,78 @@ public class Enemy : MonoBehaviour
         switch (other.tag)
         {
             case "Laser":
+
                 if (other.TryGetComponent(out Laser laser))
                 {
                     if (laser.ReportLastOwner().CompareTag("Player"))
                     {
-                        laser.SendToPool();
+                        if (!_shieldActive)
+                        {
+                            laser.SendToPool();
+
+                            SpawnManager.Instance.SpawnExplosion(transform.position);
+                            PlaySFX(1);
+                            StartCoroutine(SendToPool());
+                            if (OnEnemyDeath != null)
+                                OnEnemyDeath(_pointValue, this.transform);
+
+                            SpawnManager.Instance.CountEnemyDeath();
+                        }
+                        else
+                        {
+                            _shieldActive = false;
+                            StartCoroutine(ShieldPowerDownRoutine());
+                            laser.SendToPool();
+                        }
+                    }
+                }
+                else if (other.TryGetComponent(out Missile missile))
+                {
+                    if (!_shieldActive)
+                    {
+                        Debug.Log("Sending Missile to Pool Due to Enemy Impact");
+                        missile.SendToPool();
 
                         SpawnManager.Instance.SpawnExplosion(transform.position);
                         PlaySFX(1);
                         StartCoroutine(SendToPool());
                         if (OnEnemyDeath != null)
-                            OnEnemyDeath(_pointValue,this.transform);
+                            OnEnemyDeath(_pointValue, this.transform);
 
                         SpawnManager.Instance.CountEnemyDeath();
+
+                    }
+                    else
+                    {
+                        _shieldActive = false;
+                        StartCoroutine(ShieldPowerDownRoutine());
+                        missile.SendToPool();
                     }
                 }
-                else if (other.TryGetComponent(out Missile missile))
-                {
-                    Debug.Log("Sending Missile to Pool Due to Enemy Impact");
-                    missile.SendToPool();
-
-                    SpawnManager.Instance.SpawnExplosion(transform.position);
-                    PlaySFX(1);
-                    StartCoroutine(SendToPool());
-                    if (OnEnemyDeath != null)
-                        OnEnemyDeath(_pointValue,this.transform);
-
-                    SpawnManager.Instance.CountEnemyDeath();
-                }
+               
                 break;
             case "Player":
                 if (other.TryGetComponent(out Player player))
+                {
                     player.Damage();
+                    if (!_shieldActive)
+                    {
 
-                SpawnManager.Instance.SpawnExplosion(transform.position);
-                PlaySFX(1);
-                StartCoroutine(SendToPool());
-                if (OnEnemyDeath != null)
-                    OnEnemyDeath(_pointValue / 2,this.transform);
 
-                SpawnManager.Instance.CountEnemyDeath();
+                        SpawnManager.Instance.SpawnExplosion(transform.position);
+                        PlaySFX(1);
+                        StartCoroutine(SendToPool());
+                        if (OnEnemyDeath != null)
+                            OnEnemyDeath(_pointValue / 2, this.transform);
+
+                        SpawnManager.Instance.CountEnemyDeath();
+                    }
+                    else
+                    {
+                        _shieldActive = false;
+                        StartCoroutine(ShieldPowerDownRoutine());
+                    }
+                }
                 break;
             case "Enemy":
                 if (transform.position.z > 14)
@@ -190,6 +244,40 @@ public class Enemy : MonoBehaviour
     private void PlayerDeath()
     {
         _respawning = false;
+    }
+
+    private void ShieldPowerON()
+    {
+        _shield.SetActive(true);
+        _shieldRenderer.material.SetFloat("_power", 1f);
+    }
+
+    private void ShieldPowerOFF()
+    {
+        _shield.SetActive(false);
+        _shieldRenderer.material.SetFloat("_power", 0);
+    }
+
+    IEnumerator ShieldPowerDownRoutine()
+    {
+        _collider.enabled = false;
+        float power = 2f;
+        _shieldRenderer.material.SetFloat("_power", power);
+        if (!_shieldActive)
+        {
+            yield return new WaitForSeconds(.33f);
+            while (power > -3f)
+            {
+                yield return new WaitForEndOfFrame();
+                power -= Time.deltaTime * 20;
+                _shieldRenderer.material.SetFloat("_power", power);
+            }
+            power = 0f;
+            _shieldRenderer.material.SetFloat("_power", power);
+            _shieldActive = false;
+            _shield.SetActive(false);
+        }
+        _collider.enabled = true;
     }
 
     private void OnDisable()

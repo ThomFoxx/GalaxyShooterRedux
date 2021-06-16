@@ -22,17 +22,43 @@ public class Teleporter : MonoBehaviour
     private Missile _missile = new Missile();
     [SerializeField]
     private Transform _player;
+    [SerializeField]
+    private int _shieldChance;
+    [SerializeField]
+    private bool _shieldActive;
+    [SerializeField]
+    private GameObject _shield;
+    private Renderer _shieldRenderer;
 
 
     public delegate void EnemyDeath(int pointValue, Transform self);
     public static event EnemyDeath OnEnemyDeath;
+
+    private void Awake()
+    {
+        _shieldRenderer = _shield.GetComponent<Renderer>();
+    }
 
     private void OnEnable()
     {
         _isTeleporting = false;
         Player.OnPlayerDeath += PlayerDeath;
         Missile.OnMissileDeath += MissileLoss;
+
+        float RNGShield = Random.Range(0, 100);
+        if (RNGShield <= _shieldChance * SpawnManager.Instance.ReportCurrentWave())
+        {
+            _shieldActive = true;
+            ShieldPowerON();
+        }
+        else
+        {
+            _shieldActive = false;
+            ShieldPowerOFF();
+        }
+
         StartCoroutine(SingleRandomTeleport());
+        StartCoroutine(WeaponCheck());
 
     }
 
@@ -71,7 +97,6 @@ public class Teleporter : MonoBehaviour
         _missile.SetLastOwner(this.transform);
         _missile.transform.gameObject.SetActive(true);
         _missile.SetTarget(_player);
-        Debug.Log("Firing " + _missile.name);
         _missile = new Missile();
     }
 
@@ -157,7 +182,9 @@ public class Teleporter : MonoBehaviour
                 {
                     if (laser.ReportLastOwner().CompareTag("Player"))
                     {
-                        laser.SendToPool();
+                        if (!_shieldActive)
+                        {
+                            laser.SendToPool();
 
                         SpawnManager.Instance.SpawnExplosion(transform.position);
                         PlaySFX(1);
@@ -167,10 +194,19 @@ public class Teleporter : MonoBehaviour
 
                         SpawnManager.Instance.CountEnemyDeath();
                     }
+                    else
+                    {
+                        _shieldActive = false;
+                        StartCoroutine(ShieldPowerDownRoutine());
+                        laser.SendToPool();
+                    }
+                }
                 }
                 else if (other.TryGetComponent(out Missile missile) && !missile.ReportLastOwner().TryGetComponent(out Teleporter teleport))
                 {
-                    SpawnManager.Instance.SpawnExplosion(transform.position);
+                    if (!_shieldActive)
+                    {
+                        SpawnManager.Instance.SpawnExplosion(transform.position);
                     PlaySFX(1);
                     StartCoroutine(SendToPool());
                     if (OnEnemyDeath != null)
@@ -178,18 +214,35 @@ public class Teleporter : MonoBehaviour
 
                     SpawnManager.Instance.CountEnemyDeath();
                 }
+                else
+                {
+                    _shieldActive = false;
+                    StartCoroutine(ShieldPowerDownRoutine());
+                    missile.SendToPool();
+                }
+        }
                 break;
             case "Player":
                 if (other.TryGetComponent(out Player player))
+                {
                     player.Damage();
 
-                SpawnManager.Instance.SpawnExplosion(transform.position);
-                PlaySFX(1);
-                StartCoroutine(SendToPool());
-                if (OnEnemyDeath != null)
-                    OnEnemyDeath(_pointValue / 2, this.transform);
+                    if (!_shieldActive)
+                    {
+                        SpawnManager.Instance.SpawnExplosion(transform.position);
+                    PlaySFX(1);
+                    StartCoroutine(SendToPool());
+                    if (OnEnemyDeath != null)
+                        OnEnemyDeath(_pointValue / 2, this.transform);
 
-                SpawnManager.Instance.CountEnemyDeath();
+                    SpawnManager.Instance.CountEnemyDeath();
+                    }
+                    else
+                    {
+                        _shieldActive = false;
+                        StartCoroutine(ShieldPowerDownRoutine());
+                    }
+                }
                 break;
             case "Enemy":
                 StartCoroutine(SingleRandomTeleport());
@@ -207,6 +260,40 @@ public class Teleporter : MonoBehaviour
     private void PlayerDeath()
     {
         _respawning = false;
+    }
+
+    private void ShieldPowerON()
+    {
+        _shield.SetActive(true);
+        _shieldRenderer.material.SetFloat("_power", 1f);
+    }
+
+    private void ShieldPowerOFF()
+    {
+        _shield.SetActive(false);
+        _shieldRenderer.material.SetFloat("_power", 0);
+    }
+
+    IEnumerator ShieldPowerDownRoutine()
+    {
+        _collider.enabled = false;
+        float power = 2f;
+        _shieldRenderer.material.SetFloat("_power", power);
+        if (!_shieldActive)
+        {
+            yield return new WaitForSeconds(.33f);
+            while (power > -3f)
+            {
+                yield return new WaitForEndOfFrame();
+                power -= Time.deltaTime * 20;
+                _shieldRenderer.material.SetFloat("_power", power);
+            }
+            power = 0f;
+            _shieldRenderer.material.SetFloat("_power", power);
+            _shieldActive = false;
+            _shield.SetActive(false);
+        }
+        _collider.enabled = true;
     }
 
     private void OnDisable()

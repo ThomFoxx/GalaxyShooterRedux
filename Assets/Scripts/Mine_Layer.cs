@@ -28,9 +28,15 @@ public class Mine_Layer : MonoBehaviour
     private Vector2 _laserCoolDown = new Vector2(.5f, 3);
     private GameObject _target;
     [SerializeField]
-    private int _maxMineCount = 3;
+    private int _maxMineCount;
     private int _mineCount;
-    private bool _mineReady = true;
+    [SerializeField]
+    private int _shieldChance;
+    [SerializeField]
+    private bool _shieldActive;
+    [SerializeField]
+    private GameObject _shield;
+    private Renderer _shieldRenderer;
 
     public delegate void EnemyDeath(int pointValue, Transform self);
     public static event EnemyDeath OnEnemyDeath;
@@ -39,14 +45,14 @@ public class Mine_Layer : MonoBehaviour
 
 
     private void Awake()
-    {            
-        _target = GameObject.FindGameObjectWithTag("Player");        
+    {
+        _shieldRenderer = _shield.GetComponent<Renderer>();
+        _target = GameObject.FindGameObjectWithTag("Player");
     }
 
     private void OnEnable()
     {
         Player.OnPlayerDeath += PlayerDeath;
-        //StartCoroutine(LaserReloadTimer());
     }
 
     void Update()
@@ -74,7 +80,7 @@ public class Mine_Layer : MonoBehaviour
             PlaySFX(2);
         }
         if (_target != null)
-            if (_mineCount > 0 && MiningPosition() && _mineReady)
+            if (_mineCount > 0 && MiningPosition())
             {
                 StartCoroutine(ReleaseMines());
             }
@@ -95,25 +101,26 @@ public class Mine_Layer : MonoBehaviour
 
     IEnumerator ReleaseMines()
     {
-        _mineReady = false;
         float RNG = Random.Range(0.25f, 2);
-        yield return new WaitForSeconds(RNG/_mineCount);
+        yield return new WaitForSeconds(RNG);
 
-        while (_mineCount > 0)
+        if (transform.position.z < 0)
         {
-            for (int i = 0; i < _mineCount; i++)
+            while (_mineCount > 0)
             {
-                yield return new WaitForSeconds(.01f);
-                for (int x = 0; x < 2; x++)
+                for (int i = 0; i < _mineCount; i++)
                 {
-                    GameObject Mine = PoolManager.Instance.RequestFromPool(_minePrefab);
-                    SetupPoolObject(Mine, _mineOffeset[x]);
-                    StartCoroutine(Mine.GetComponent<Mine>().Slowdown(_mineCount));
+                    yield return new WaitForSeconds(.01f);
+                    for (int x = 0; x < 2; x++)
+                    {
+                        GameObject Mine = PoolManager.Instance.RequestFromPool(_minePrefab);
+                        SetupPoolObject(Mine, _mineOffeset[x]);
+                        StartCoroutine(Mine.GetComponent<Mine>().Slowdown(i + 1));
+                    }
                 }
-                _mineCount--;
+                _mineCount = 0;
             }
         }
-        _mineReady = true;
     }
 
     private void SetupPoolObject(GameObject Obj, Transform Offset)
@@ -138,6 +145,19 @@ public class Mine_Layer : MonoBehaviour
             {
                 float RNG = Random.Range(-20f, 20f);
                 transform.position = new Vector3(RNG, 0, 20);
+
+                float RNGShield = Random.Range(0, 100);
+                if (RNGShield <= _shieldChance * SpawnManager.Instance.ReportCurrentWave())
+                {
+                    _shieldActive = true;
+                    ShieldPowerON();
+                }
+                else
+                {
+                    _shieldActive = false;
+                    ShieldPowerOFF();
+                }
+
                 ReloadMines();
                 if (OnEnemyRespawn != null)
                     OnEnemyRespawn(this.transform);
@@ -165,7 +185,32 @@ public class Mine_Layer : MonoBehaviour
                 {
                     if (laser.ReportLastOwner().CompareTag("Player"))
                     {
-                        laser.SendToPool();
+                        if (!_shieldActive)
+                        {
+                            laser.SendToPool();
+
+                            SpawnManager.Instance.SpawnExplosion(transform.position);
+                            PlaySFX(1);
+                            StartCoroutine(SendToPool());
+                            if (OnEnemyDeath != null)
+                                OnEnemyDeath(_pointValue, this.transform);
+
+                            SpawnManager.Instance.CountEnemyDeath();
+                        }
+                        else
+                        {
+                            _shieldActive = false;
+                            StartCoroutine(ShieldPowerDownRoutine());
+                            laser.SendToPool();
+                        }
+                    }
+                }
+                else if (other.TryGetComponent(out Missile missile))
+                {
+                    if (!_shieldActive)
+                    {
+
+                        missile.SendToPool();
 
                         SpawnManager.Instance.SpawnExplosion(transform.position);
                         PlaySFX(1);
@@ -175,32 +220,34 @@ public class Mine_Layer : MonoBehaviour
 
                         SpawnManager.Instance.CountEnemyDeath();
                     }
-                }
-                else if (other.TryGetComponent(out Missile missile))
-                {
-                    Debug.Log("Sending Missile to Pool Due to Enemy Impact");
-                    missile.SendToPool();
-
-                    SpawnManager.Instance.SpawnExplosion(transform.position);
-                    PlaySFX(1);
-                    StartCoroutine(SendToPool());
-                    if (OnEnemyDeath != null)
-                        OnEnemyDeath(_pointValue, this.transform);
-
-                    SpawnManager.Instance.CountEnemyDeath();
+                    else
+                    {
+                        _shieldActive = false;
+                        StartCoroutine(ShieldPowerDownRoutine());
+                        missile.SendToPool();
+                    }
                 }
                 break;
             case "Player":
                 if (other.TryGetComponent(out Player player))
+                {
                     player.Damage();
+                    if (!_shieldActive)
+                    {
+                        SpawnManager.Instance.SpawnExplosion(transform.position);
+                        PlaySFX(1);
+                        StartCoroutine(SendToPool());
+                        if (OnEnemyDeath != null)
+                            OnEnemyDeath(_pointValue / 2, this.transform);
 
-                SpawnManager.Instance.SpawnExplosion(transform.position);
-                PlaySFX(1);
-                StartCoroutine(SendToPool());
-                if (OnEnemyDeath != null)
-                    OnEnemyDeath(_pointValue / 2, this.transform);
-
-                SpawnManager.Instance.CountEnemyDeath();
+                        SpawnManager.Instance.CountEnemyDeath();
+                    }
+                    else
+                    {
+                        _shieldActive = false;
+                        StartCoroutine(ShieldPowerDownRoutine());
+                    }
+                }
                 break;
             case "Enemy":
                 if (transform.position.z > 14)
@@ -225,6 +272,40 @@ public class Mine_Layer : MonoBehaviour
     private void PlaySFX(int SFXGroup)
     {
         AudioManager.Instance.PlaySFX(SFXGroup);
+    }
+
+    private void ShieldPowerON()
+    {
+        _shield.SetActive(true);
+        _shieldRenderer.material.SetFloat("_power", 1f);
+    }
+
+    private void ShieldPowerOFF()
+    {
+        _shield.SetActive(false);
+        _shieldRenderer.material.SetFloat("_power", 0);
+    }
+
+    IEnumerator ShieldPowerDownRoutine()
+    {
+        _collider.enabled = false;
+        float power = 2f;
+        _shieldRenderer.material.SetFloat("_power", power);
+        if (!_shieldActive)
+        {
+            yield return new WaitForSeconds(.33f);
+            while (power > -3f)
+            {
+                yield return new WaitForEndOfFrame();
+                power -= Time.deltaTime * 20;
+                _shieldRenderer.material.SetFloat("_power", power);
+            }
+            power = 0f;
+            _shieldRenderer.material.SetFloat("_power", power);
+            _shieldActive = false;
+            _shield.SetActive(false);
+        }
+        _collider.enabled = true;
     }
 
     private void PlayerDeath()
