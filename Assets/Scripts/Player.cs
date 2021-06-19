@@ -116,6 +116,8 @@ public class Player : MonoBehaviour
         Enemy.OnEnemyDeath += EnemyDeath;
         Teleporter.OnEnemyDeath += EnemyDeath;
         Aggressive_Enemy.OnEnemyDeath += EnemyDeath;
+        Mine_Layer.OnEnemyDeath += EnemyDeath;
+        ShieldUnit.OnEnemyDeath += EnemyDeath;
         Mine.OnMineDestroy += EnemyDeath;
     }
 
@@ -710,6 +712,8 @@ public class Player : MonoBehaviour
         Enemy.OnEnemyDeath -= EnemyDeath;
         Teleporter.OnEnemyDeath -= EnemyDeath;
         Aggressive_Enemy.OnEnemyDeath -= EnemyDeath;
+        Mine_Layer.OnEnemyDeath -= EnemyDeath;
+        ShieldUnit.OnEnemyDeath -= EnemyDeath;
         Mine.OnMineDestroy -= EnemyDeath;
     }
 }

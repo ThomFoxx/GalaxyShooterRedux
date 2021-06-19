@@ -58,7 +58,9 @@ public class UIManager : MonoBehaviour
         Enemy.OnEnemyDeath += EnemyDeath;
         Teleporter.OnEnemyDeath += EnemyDeath;
         Aggressive_Enemy.OnEnemyDeath += EnemyDeath;
+        Mine_Layer.OnEnemyDeath += EnemyDeath;
         Mine.OnMineDestroy += EnemyDeath;
+        ShieldUnit.OnEnemyDeath += EnemyDeath;
         Player.OnPlayerDamaged += PlayerDamaged;
         Player.OnPlayerDeath += PlayerDeath;
         Player.OnAmmoTypeChange += FireType;
@@ -206,6 +208,8 @@ public class UIManager : MonoBehaviour
         Enemy.OnEnemyDeath -= EnemyDeath;
         Teleporter.OnEnemyDeath -= EnemyDeath;
         Aggressive_Enemy.OnEnemyDeath -= EnemyDeath;
+        Mine_Layer.OnEnemyDeath -= EnemyDeath;
+        ShieldUnit.OnEnemyDeath -= EnemyDeath;
         Mine.OnMineDestroy -= EnemyDeath;
         Player.OnPlayerDamaged -= PlayerDamaged;
         Player.OnPlayerDeath -= PlayerDeath;
