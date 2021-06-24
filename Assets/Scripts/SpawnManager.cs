@@ -7,6 +7,8 @@ public class SpawnManager : MonoBehaviour
     [SerializeField]
     private GameObject[] _enemyPrefabs;
     [SerializeField]
+    private GameObject _bossPrefab;
+    [SerializeField]
     private GameObject _explosionPrefab;
     [SerializeField]
     private GameObject[] _powerupPrefabs;
@@ -63,6 +65,11 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
+    public void StopSpawning()
+    {
+        _spawning = false;
+    }
+
     private void PlayerDeath()
     {
         _spawning = false;
@@ -70,16 +77,29 @@ public class SpawnManager : MonoBehaviour
 
     IEnumerator WaveStart()
     {
+        StopCoroutine(EnemySpawnRoutine());
         if (_currentWave < _waveCounts.Length)
         {
-            UIManager.Instance.UpdateWaveDisplay(_currentWave + 1);
-            _spawnedEnemiesInWave = 0;
-            _killedEnemiesInWave = 0;
-            _spawning = true;
-            yield return new WaitForSeconds(5);
-            StartCoroutine(EnemySpawnRoutine());
+            if (_waveCounts[_currentWave] == 0)
+            {
+                StopCoroutine(EnemySpawnRoutine());
+                _spawnedEnemiesInWave = 0;
+                _killedEnemiesInWave = 0;
+                Instantiate(_bossPrefab, Vector3.zero, Quaternion.identity);
+                _spawning = true;
+            }
+            else
+            {
+                StopCoroutine(EnemySpawnRoutine());
+                UIManager.Instance.UpdateWaveDisplay(_currentWave + 1);
+                _spawnedEnemiesInWave = 0;
+                _killedEnemiesInWave = 0;
+                _spawning = true;
+                yield return new WaitForSeconds(5);
+                StartCoroutine(EnemySpawnRoutine());
+            }
         }
-        else
+        else if (_currentWave < _waveCounts.Length && _waveCounts[_currentWave] != 0)
         {
             _spawning = false;
             GameManager.Instance.GameOver(true);
@@ -119,18 +139,18 @@ public class SpawnManager : MonoBehaviour
     {
         int RNG = Random.Range(0, 100);
         if (RNG <= 5 * _currentWave)
-            return _enemyPrefabs[1];
-        else if (RNG <= 10 * _currentWave)
             return _enemyPrefabs[2];
-        else if (RNG <= 15 * _currentWave)
+        else if (RNG <= 10 * _currentWave)
             return _enemyPrefabs[3];
+        else if (RNG <= 15 * _currentWave)
+            return _enemyPrefabs[4];
         else
-            return _enemyPrefabs[0];
+            return _enemyPrefabs[1];
     }
 
     IEnumerator EnemySpawnRoutine()
     {
-        while (_spawning)
+        while (_spawning && _waveCounts[_currentWave] != 0)
         {
             while (_currentWave < _waveCounts.Length && _spawnedEnemiesInWave < _waveCounts[_currentWave])
             {
@@ -146,10 +166,11 @@ public class SpawnManager : MonoBehaviour
                     launch = new Vector3(0, RNG, 15);
                 }
                 SpawnEnemy(launch, EnemyToSpawn());
+                _spawnedEnemiesInWave++;
                 yield return new WaitForSeconds(5);
             }
             yield return new WaitForEndOfFrame();
-            if (_currentWave < _waveCounts.Length && _killedEnemiesInWave == _waveCounts[_currentWave])
+            if (_currentWave < _waveCounts.Length && _killedEnemiesInWave >= _waveCounts[_currentWave])
             {
                 _spawning = false;
                 _currentWave++;
@@ -170,7 +191,6 @@ public class SpawnManager : MonoBehaviour
                 Enemy.transform.localScale = Prefab.transform.localScale;
                 Enemy.SetActive(true);
             }
-        _spawnedEnemiesInWave++;
     }
 
     public void CountEnemyDeath()

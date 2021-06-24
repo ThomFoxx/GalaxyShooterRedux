@@ -85,6 +85,8 @@ public class AudioManager : MonoBehaviour
 
     public void PlayMusic(int ClipId, float volume)
     {
-        _SFXSource.PlayOneShot(_music[ClipId], volume);
+        _musicSource.loop = true;
+        _musicSource.clip = _music[ClipId];
+        _musicSource.Play();
     }
 }

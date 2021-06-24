@@ -260,6 +260,7 @@ public class Teleporter : MonoBehaviour
     private void PlayerDeath()
     {
         _respawning = false;
+        SendToPool();
     }
 
     private void ShieldPowerON()

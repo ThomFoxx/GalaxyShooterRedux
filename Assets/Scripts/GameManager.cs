@@ -31,6 +31,11 @@ public class GameManager : MonoBehaviour
         Player.OnPlayerDeath += PlayerDeath;
     }
 
+    private void Start()
+    {
+        AudioManager.Instance.PlayMusic(0, .5f);   
+    }
+
     private void Update()
     {
         if(_isGameOver && Input.GetKeyDown(KeyCode.R))

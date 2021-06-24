@@ -59,12 +59,10 @@ public class Missile : MonoBehaviour
 
         if (transform.position.x > 20 | transform.position.x < -20)
         {
-            Debug.Log("Sending Missile to Pool due to X");
             SendToPool();
         }
         if (transform.position.z > 25 | transform.position.z < -25 )
         {
-            Debug.Log("Sending Missile to Pool due to Z");
             SendToPool();
         }
     }
@@ -96,7 +94,6 @@ public class Missile : MonoBehaviour
     {
         if (OnMissileDeath != null)
         {
-            Debug.Log("Sending Destruction Confirmation");
             OnMissileDeath(this.transform);
         }
 
@@ -120,7 +117,6 @@ public class Missile : MonoBehaviour
             case "Laser":
                 SpawnManager.Instance.SpawnExplosion(transform.position);
                 PlaySFX(1);
-                Debug.Log("Sending Missile to Pool Due to Laser Impact");
                 SendToPool();
                 break;
             case "Player":
@@ -131,7 +127,6 @@ public class Missile : MonoBehaviour
 
                     SpawnManager.Instance.SpawnExplosion(transform.position);
                     PlaySFX(1);
-                    Debug.Log("Sending Missile to Pool Due to Player Impact");
                     SendToPool();
                 }
                 break;
@@ -140,12 +135,11 @@ public class Missile : MonoBehaviour
                 {
                     SpawnManager.Instance.SpawnExplosion(transform.position);
                     PlaySFX(1);
-                    Debug.Log("Sending Missile to Pool Due to Enemy Impact(Player)");
                     SendToPool();
                 }
                 else if (!other.TryGetComponent(out Teleporter Telelport))
                 {
-                    Debug.Log("Sending Missile to Pool Due to Enemy Impact(Teleporter)");
+
                     SpawnManager.Instance.SpawnExplosion(transform.position);
                     PlaySFX(1);
                     SendToPool();
@@ -160,7 +154,6 @@ public class Missile : MonoBehaviour
     {
         if (transform.gameObject.activeSelf)
         {
-            Debug.Log("Sending Missile to Pool Due to Player Death");
             SendToPool();
         }
     }

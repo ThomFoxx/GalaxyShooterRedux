@@ -119,6 +119,8 @@ public class Player : MonoBehaviour
         Mine_Layer.OnEnemyDeath += EnemyDeath;
         ShieldUnit.OnEnemyDeath += EnemyDeath;
         Mine.OnMineDestroy += EnemyDeath;
+        Boss.OnFireDisable += DisableFiring;
+        Boss.OnFireEnable += EnableFiring;
     }
 
     void Start()
@@ -396,6 +398,16 @@ public class Player : MonoBehaviour
         _laserCanFire = true;
     }
 
+    private void EnableFiring()
+    {
+        _laserCanFire = true;
+    }
+
+    private void DisableFiring()
+    {
+        _laserCanFire = false;
+    }
+
     IEnumerator MissileReloadTimer()
     {
         yield return _missileCoolDownTimer;
@@ -472,7 +484,6 @@ public class Player : MonoBehaviour
 
     private void EnemyDeath(int PointValue, Transform notUsed)
     {
-        Debug.Log("Enemy Destroyed");
         _score += PointValue;
     }
 
@@ -715,5 +726,7 @@ public class Player : MonoBehaviour
         Mine_Layer.OnEnemyDeath -= EnemyDeath;
         ShieldUnit.OnEnemyDeath -= EnemyDeath;
         Mine.OnMineDestroy -= EnemyDeath;
+        Boss.OnFireDisable -= DisableFiring;
+        Boss.OnFireEnable -= EnableFiring;
     }
 }

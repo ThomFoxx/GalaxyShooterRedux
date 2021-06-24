@@ -54,13 +54,16 @@ public class UIManager : MonoBehaviour
 
     private void OnEnable()
     {
-        _player = GameObject.Find("Player").GetComponent<Player>();
+        if (GameObject.Find("Player") != null)
+            _player = GameObject.Find("Player").GetComponent<Player>();
+
         Enemy.OnEnemyDeath += EnemyDeath;
         Teleporter.OnEnemyDeath += EnemyDeath;
         Aggressive_Enemy.OnEnemyDeath += EnemyDeath;
         Mine_Layer.OnEnemyDeath += EnemyDeath;
         Mine.OnMineDestroy += EnemyDeath;
         ShieldUnit.OnEnemyDeath += EnemyDeath;
+        BossGun.OnEnemyDeath += EnemyDeath;
         Player.OnPlayerDamaged += PlayerDamaged;
         Player.OnPlayerDeath += PlayerDeath;
         Player.OnAmmoTypeChange += FireType;
@@ -203,6 +206,11 @@ public class UIManager : MonoBehaviour
         StartCoroutine(DisplayWave());
     }
 
+    public void TriggerGameOver()
+    {
+        StartCoroutine(DisplayGameOver());
+    }
+
     private void OnDisable()
     {
         Enemy.OnEnemyDeath -= EnemyDeath;
@@ -211,6 +219,7 @@ public class UIManager : MonoBehaviour
         Mine_Layer.OnEnemyDeath -= EnemyDeath;
         ShieldUnit.OnEnemyDeath -= EnemyDeath;
         Mine.OnMineDestroy -= EnemyDeath;
+        BossGun.OnEnemyDeath -= EnemyDeath;
         Player.OnPlayerDamaged -= PlayerDamaged;
         Player.OnPlayerDeath -= PlayerDeath;
         Player.OnAmmoTypeChange -= FireType;

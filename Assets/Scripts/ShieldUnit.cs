@@ -44,7 +44,6 @@ public class ShieldUnit : MonoBehaviour
                             if (OnEnemyDeath != null)
                                 OnEnemyDeath(_pointValue, this.transform);
 
-                            SpawnManager.Instance.CountEnemyDeath();
                         }
                         else
                         {
@@ -67,7 +66,6 @@ public class ShieldUnit : MonoBehaviour
                         if (OnEnemyDeath != null)
                             OnEnemyDeath(_pointValue, this.transform);
 
-                        SpawnManager.Instance.CountEnemyDeath();
 
                     }
                     else
@@ -93,7 +91,6 @@ public class ShieldUnit : MonoBehaviour
                         if (OnEnemyDeath != null)
                             OnEnemyDeath(_pointValue / 2, this.transform);
 
-                        SpawnManager.Instance.CountEnemyDeath();
                     }
                     else
                     {
@@ -139,10 +136,6 @@ public class ShieldUnit : MonoBehaviour
         _isExploding = true;
         _collider.enabled = false;
         yield return new WaitForSeconds(.33f);
-        _isExploding = false;
-        _collider.enabled = true;
-        transform.localPosition = Vector3.zero;
-        transform.localScale = Vector3.one;
         transform.gameObject.SetActive(false);
     }
 

@@ -73,7 +73,7 @@ public class Aggressive_Enemy : MonoBehaviour
 
     private void Weapon()
     {
-        if (_laserCanFire)
+        if (_laserCanFire && !_isExploding)
         {
             GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
             SetupPoolObject(GO, _laserOffset);
@@ -183,8 +183,7 @@ public class Aggressive_Enemy : MonoBehaviour
                 else if (other.TryGetComponent(out Missile missile))
                 {
                     if (!_shieldActive)
-                    {
-                        Debug.Log("Sending Missile to Pool Due to Enemy Impact");
+                    {                        
                         missile.SendToPool();
 
                         SpawnManager.Instance.SpawnExplosion(transform.position);

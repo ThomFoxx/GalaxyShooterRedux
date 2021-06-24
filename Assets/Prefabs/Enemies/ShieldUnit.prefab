@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 3156962399726969611}
   m_Layer: 0
   m_Name: ShieldUnit
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -95,7 +95,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1922374098189245732, guid: 32ee189b59d91f74596d65ea288abff1, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7818944584082848183, guid: 32ee189b59d91f74596d65ea288abff1, type: 3}
       propertyPath: m_RootOrder

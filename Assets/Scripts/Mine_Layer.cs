@@ -70,7 +70,7 @@ public class Mine_Layer : MonoBehaviour
 
     private void Weapon()
     {
-        if (_laserCanFire)
+        if (_laserCanFire && !_isExploding)
         {
             GameObject GO = PoolManager.Instance.RequestFromPool(_laserPrefab);
             SetupPoolObject(GO, _laserOffset);

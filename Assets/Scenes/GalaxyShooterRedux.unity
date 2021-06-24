@@ -1428,10 +1428,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _enemyPrefabs:
+  - {fileID: 6236326584374716316, guid: c700a6cc8ed03074ab554d9f0448fa4b, type: 3}
   - {fileID: 971671729424399130, guid: e890fdc0c790d16438a58b374f961d64, type: 3}
   - {fileID: 3515613890052792586, guid: 2175d63d7d88d93498f06debc8b09df5, type: 3}
   - {fileID: 971671729424399130, guid: 872c2d9382a50554d95425f27f4a866d, type: 3}
   - {fileID: 971671729424399130, guid: 9e614438b56ccb54299b0c3b1e62a433, type: 3}
+  _bossPrefab: {fileID: 6236326584374716316, guid: c700a6cc8ed03074ab554d9f0448fa4b, type: 3}
   _explosionPrefab: {fileID: 2469343265430690884, guid: 2dda263f6882f8c46a6adb95d59f8318, type: 3}
   _powerupPrefabs:
   - {fileID: 220856148542520044, guid: 94fe2c55e43acb247aa954e0f8e1666e, type: 3}
@@ -1443,7 +1445,7 @@ MonoBehaviour:
   - {fileID: 220856148542520044, guid: cf20e56e5a2d94a4ebe850bd9a7862d5, type: 3}
   - {fileID: 5319990179745213460, guid: 02033e420646aaf4ba0692da421b9be3, type: 3}
   _enemyCountLimit: 75
-  _waveCounts: 010000000a0000000a0000000a0000000a000000
+  _waveCounts: 050000000a0000000f000000140000001900000000000000
 --- !u!4 &1143903432
 Transform:
   m_ObjectHideFlags: 0
